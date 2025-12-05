@@ -1,0 +1,48 @@
+services:
+  # 1. MySQL 資料庫服務
+  mysql-db:
+    image: mysql:8.0
+    container_name: asus_news_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: mysecretpassword
+      MYSQL_DATABASE: security_news
+      MYSQL_USER: scraper_user
+      MYSQL_PASSWORD: scraper_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - scraper_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Python 應用程式服務
+  app:
+    build: .
+    container_name: asus_news_worker
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      # 讓 Python 知道資料庫在哪裡
+      - DB_HOST=mysql-db
+      - DB_USER=scraper_user
+      - DB_PASSWORD=scraper_password
+      - DB_NAME=security_news
+    volumes:
+      - .:/app
+    networks:
+      - scraper_network
+
+volumes:
+  db_data:
+
+networks:
+  scraper_network:
+    driver: bridge
