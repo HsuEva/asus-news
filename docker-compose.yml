@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # 1. MySQL 資料庫服務
   mysql-db:
@@ -29,16 +31,18 @@ services:
     depends_on:
       mysql-db:
         condition: service_healthy
-    environment:
-      # 讓 Python 知道資料庫在哪裡
-      - DB_HOST=mysql-db
-      - DB_USER=scraper_user
-      - DB_PASSWORD=scraper_password
-      - DB_NAME=security_news
+    # --- [關鍵修正] ---
+    # 使用 env_file 直接載入 .env 檔案中的所有變數
+    # 這樣 Python 才能讀取到 GOOGLE_FORM_URL
+    env_file:
+      - .env
+    # ----------------
     volumes:
       - .:/app
     networks:
       - scraper_network
+    # 保持容器開啟，方便開發
+    command: tail -f /dev/null
 
 volumes:
   db_data:

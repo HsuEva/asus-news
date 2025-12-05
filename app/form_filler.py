@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,115 +16,92 @@ class FormFiller:
     def __init__(self):
         self.form_url = os.getenv('GOOGLE_FORM_URL')
         if not self.form_url:
-            raise ValueError("環境變數 GOOGLE_FORM_URL 未設定！請檢查 .env 檔案。")
+            raise ValueError("環境變數 GOOGLE_FORM_URL 未設定！")
         
         self.driver = self._setup_driver()
 
     def _setup_driver(self) -> webdriver.Chrome:
-        """初始化 Selenium Driver (針對 Docker 環境優化)"""
         chrome_options = Options()
-        # 使用新版 headless 模式，穩定性較高
         chrome_options.add_argument("--headless=new") 
-        # 解決 Linux 容器權限問題
         chrome_options.add_argument("--no-sandbox")
-        # 解決共享記憶體不足導致的崩潰
         chrome_options.add_argument("--disable-dev-shm-usage")
-        # 設定視窗大小，避免 RWD 隱藏元素
-        chrome_options.add_argument("--window-size=1920,1080")
-        # 禁用 GPU (伺服器環境不需要)
-        chrome_options.add_argument("--disable-gpu")
         
-        # 偽裝 User-Agent，避免 Google 表單拒絕存取
+        # --- [記憶體優化關鍵參數] ---
+        chrome_options.add_argument("--blink-settings=imagesEnabled=false") # 不載入圖片
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-notifications")
+        chrome_options.add_argument("--disable-application-cache")
+        chrome_options.add_argument("--window-size=1920,1080")
+        
+        # 反偵測
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
 
-    def fill_form(self, data: dict) -> bool:
-        """
-        自動填寫 Google 表單
-        :param data: 包含 title, url, publish_date, source, description, created_at 的字典
-        :return: Boolean (True=成功, False=失敗)
-        """
+    def _smart_fill(self, element, value):
         try:
-            logger.info(f"正在前往 Google 表單: {self.form_url}")
+            element.clear()
+            element.send_keys(value)
+        except Exception:
+            self.driver.execute_script("""
+                arguments[0].value = arguments[1];
+                arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+                arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+            """, element, value)
+
+    def fill_form(self, data: dict) -> bool:
+        try:
             self.driver.get(self.form_url)
-            
-            # 等待表單載入 (等待第一個問題出現)
-            wait = WebDriverWait(self.driver, 15)
+            wait = WebDriverWait(self.driver, 20)
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[role="listitem"]')))
 
-            # --- 定位輸入欄位 ---
-            # Google 表單通常使用 input[type="text"] 作為簡答題
-            inputs = self.driver.find_elements(By.CSS_SELECTOR, 'input[type="text"]')
-            
-            # Google 表單通常使用 textarea 作為段落 (摘要)
+            inputs = self.driver.find_elements(By.CSS_SELECTOR, "input.whsOnd")
+            if not inputs:
+                inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
             textareas = self.driver.find_elements(By.TAG_NAME, 'textarea')
 
-            # 檢查欄位數量是否足夠 (根據您的需求，至少要有 5 個簡答題 + 1 個段落)
-            # 順序假設: 1.標題, 2.連結, 3.日期, 4.來源, 5.擷取時間
             if len(inputs) >= 5:
-                # 1. 填寫標題
-                inputs[0].clear()
-                inputs[0].send_keys(data['title'])
-                
-                # 2. 填寫連結
-                inputs[1].clear()
-                inputs[1].send_keys(data['url'])
-                
-                # 3. 填寫發布日期 (轉為字串)
-                inputs[2].clear()
-                inputs[2].send_keys(str(data['publish_date']))
-                
-                # 4. 填寫新聞來源
-                inputs[3].clear()
-                inputs[3].send_keys(data['source'])
+                self._smart_fill(inputs[0], data['title'])
+                self._smart_fill(inputs[1], data['url'])
+                self._smart_fill(inputs[2], str(data['publish_date']))
+                self._smart_fill(inputs[3], data['source'])
 
-                # 5. 填寫擷取時間 (created_at 是資料庫自動產生的時間)
-                # 如果資料庫取出的 data 包含 created_at (datetime 物件)，轉為字串
-                capture_time = data.get('created_at') or data.get('captured_at') or datetime.now()
-                inputs[4].clear()
-                inputs[4].send_keys(str(capture_time))
+                # 時區校正 (UTC -> UTC+8)
+                raw_time = data.get('created_at') or data.get('captured_at')
+                if not raw_time: raw_time = datetime.now()
+                if isinstance(raw_time, str):
+                    try: raw_time = datetime.strptime(raw_time, '%Y-%m-%d %H:%M:%S')
+                    except: raw_time = datetime.now()
+
+                tw_time = raw_time + timedelta(hours=8)
+                self._smart_fill(inputs[4], tw_time.strftime('%Y-%m-%d %H:%M:%S'))
                 
-                # 6. 填寫內文摘要 (如果有的話)
                 if textareas and 'description' in data:
-                    textareas[0].clear()
-                    # 限制摘要長度，避免 Google 表單報錯
-                    desc_text = data['description'][:500] if data['description'] else "無摘要"
-                    textareas[0].send_keys(desc_text)
+                    desc = data['description'][:800] 
+                    self._smart_fill(textareas[0], desc)
                 
-                logger.info("欄位填寫完成，準備提交...")
+                # 提交
+                submit_btn = None
+                candidates = self.driver.find_elements(By.XPATH, "//div[@role='button']//span[text()='提交' or text()='Submit']")
+                if candidates:
+                    submit_btn = candidates[0].find_element(By.XPATH, "./../..")
+                else:
+                    submit_btn = self.driver.find_element(By.XPATH, "//div[@role='button' and (descendant::span[text()='提交'] or descendant::span[text()='Submit'])]")
+
+                self.driver.execute_script("arguments[0].scrollIntoView(true);", submit_btn)
+                time.sleep(1)
+                self.driver.execute_script("arguments[0].click();", submit_btn)
                 
-                # --- 點擊提交按鈕 ---
-                # 尋找文字為 "提交" (中文) 或 "Submit" (英文) 的按鈕
-                submit_button = self.driver.find_element(By.XPATH, '//span[text()="提交" or text()="Submit"]')
-                # 使用 JavaScript 點擊，避開可能被遮擋的問題
-                self.driver.execute_script("arguments[0].click();", submit_button)
-                
-                # --- 驗證是否成功 ---
-                # 提交後通常會出現 "您的回應已記錄" 或 "response has been recorded"
-                wait.until(EC.presence_of_element_located((By.XPATH, '//div[contains(text(), "已記錄") or contains(text(), "recorded")]')))
-                logger.info("表單提交驗證成功！")
+                wait.until(EC.presence_of_element_located((By.XPATH, '//div[contains(text(), "已記錄") or contains(text(), "recorded") or contains(text(), "response")]')))
                 return True
-                
             else:
-                logger.error(f"填表失敗: 找不到足夠的輸入框 (預期 5 個，找到 {len(inputs)} 個)。請檢查表單題目順序。")
+                logger.error(f"欄位不足: {len(inputs)}")
                 return False
 
         except Exception as e:
-            logger.error(f"填表過程發生錯誤: {e}")
-            # 發生錯誤時截圖，方便除錯 (會儲存在 Docker 容器內)
-            try:
-                filename = f"error_screenshot_{int(time.time())}.png"
-                self.driver.save_screenshot(filename)
-                logger.info(f"已儲存錯誤截圖: {filename}")
-            except:
-                pass
+            logger.error(f"填表失敗: {str(e)[:100]}")
             return False
-        finally:
-            # 關閉瀏覽器釋放記憶體
-            try:
-                self.driver.quit()
-            except:
-                pass
