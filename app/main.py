@@ -7,43 +7,38 @@ from scraper import NewsScraper
 from database import Database
 from utils import parse_relative_date
 from form_filler import FormFiller
+from logger import logger
 
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - [%(levelname)s] - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(
+#     level=logging.INFO, 
+#     format='%(asctime)s - [%(levelname)s] - %(message)s',
+#     datefmt='%Y-%m-%d %H:%M:%S'
+# )
+# logger = logging.getLogger(__name__)
 
-# --- [雙語搜尋配置] ---
+# 多源搜尋設定
+# 注意：這裡雖然移除了 lang 參數，但透過調整 query 關鍵字
+# 依然可以搜尋到不同語言的結果 (例如搜尋中文關鍵字就會找到中文新聞)
 SEARCH_CONFIGS = [
-    # 1. Google News (英文版) - 抓國際新聞
     {
         "category": "Google News (EN)",
-        "query": "ASUS router security",
-        "type": "news",
-        "lang": "en"
+        "query": "ASUS router security", # 英文關鍵字 -> 傾向找英文結果
+        "type": "news"
     },
-    # 2. Google News (中文版) - 抓台灣/中文新聞
     {
         "category": "Google News (TW)",
-        "query": "華碩 路由器 資安", # 用中文關鍵字搜中文介面最準
-        "type": "news",
-        "lang": "zh-TW"
+        "query": "華碩 路由器 資安", # 中文關鍵字 -> 傾向找中文結果
+        "type": "news"
     },
-    # 3. 官方資源 (ASUS 官網)
     {
         "category": "官方資源",
         "query": "site:asus.com security router",
-        "type": "web",
-        "lang": "en"
+        "type": "web"
     },
-    # 4. 資安通報 (國際)
     {
         "category": "資安通報", 
         "query": "site:bleepingcomputer.com OR site:thehackernews.com ASUS",
-        "type": "news",
-        "lang": "en"
+        "type": "news"
     }
 ]
 
@@ -57,14 +52,15 @@ def process_scraping_job():
         for config in SEARCH_CONFIGS:
             logger.info(f"執行任務: {config['category']}...")
             
+            # [修正重點] 呼叫時移除 lang 參數
+            # 這樣就不會觸發 TypeError，因為舊版 scraper 本來就不收這個參數
             raw_data = scraper.scrape_google_search(
                 query=config['query'],
                 source_category=config['category'],
-                search_type=config['type'],
-                lang=config['lang']
+                search_type=config['type']
+                # lang=config['lang']  <-- 已移除此行
             )
             
-            # 每個來源最多取 5 筆，避免太久
             all_news_data.extend(raw_data[:5])
             time.sleep(2)
 

@@ -9,8 +9,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from logger import logger
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 class FormFiller:
     def __init__(self):

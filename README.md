@@ -229,7 +229,6 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     ├── app/                    # 核心應用程式邏輯
     │   ├── __init__.py
     │   ├── main.py             # 程式進入點 (Entry Point)
-    │   ├── config.py           # 設定檔讀取 (讀取 env)
     │   ├── scraper.py          # 爬蟲邏輯 (Requests/BS4)
     │   ├── utils.py            # 工具包
     │   ├── database.py         # 資料庫操作 (MySQL 連線與 CRUD)
@@ -241,123 +240,235 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
 
 1.請將以下內容複製到 app/scraper.py
   import logging
-  import time
-  import random
-  from typing import List, Dict
-  from selenium import webdriver
-  from selenium.webdriver.chrome.service import Service
-  from selenium.webdriver.chrome.options import Options
-  from selenium.webdriver.common.by import By
-  from selenium.webdriver.support.ui import WebDriverWait
-  from selenium.webdriver.support import expected_conditions as EC
-  from webdriver_manager.chrome import ChromeDriverManager
+    import time
+    import random
+    import re
+    from typing import List, Dict, Optional
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.common.exceptions import TimeoutException, WebDriverException
+    from urllib3.exceptions import MaxRetryError, NewConnectionError
+    from webdriver_manager.chrome import ChromeDriverManager
+    from logger import logger
 
-  # 設定 Log 格式
-  logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-  logger = logging.getLogger(__name__)
+    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    # logger = logging.getLogger(__name__)
 
-  class NewsScraper:
+    class NewsScraper:
         def __init__(self):
+            self.driver = None
+            self._init_driver()
+
+        def _init_driver(self):
+            """初始化或重啟 Driver"""
+            if self.driver:
+                try: self.driver.quit()
+                except: pass
+            
+            logger.info("啟動 Chrome Driver (Final Stable)...")
             self.driver = self._setup_driver()
 
         def _setup_driver(self) -> webdriver.Chrome:
             chrome_options = Options()
-            
-            # --- [關鍵修正] 針對 Docker 環境的最佳化參數 ---
-            # 使用新版 headless 模式 (比舊版更穩定)
-            chrome_options.add_argument("--headless=new")
-            
-            # 解決 Docker 共享記憶體不足導致的崩潰
+            chrome_options.add_argument("--headless=new") 
+            chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             
-            # 解決 Linux root 權限問題
-            chrome_options.add_argument("--no-sandbox")
+            # [關鍵優化] Eager 模式：HTML 下載完就不等圖片/廣告，大幅減少卡死機率
+            chrome_options.page_load_strategy = 'eager'
             
-            # 禁用 GPU (Linux 伺服器通常沒顯卡)
+            # 記憶體優化
+            chrome_options.add_argument("--blink-settings=imagesEnabled=false") 
             chrome_options.add_argument("--disable-gpu")
-            
-            # 設定固定視窗大小，避免 RWD 造成元素位置跑掉
+            chrome_options.add_argument("--disable-extensions")
             chrome_options.add_argument("--window-size=1920,1080")
             
-            # 增加穩定性的額外參數
-            chrome_options.add_argument("--remote-debugging-port=9222")
-            chrome_options.add_argument("--disable-extensions")
-            chrome_options.add_argument("--disable-infobars")
-            chrome_options.add_argument("--disable-notifications")
-            
-            # 偽裝 User-Agent (避免被 Google 認定為機器人)
-            chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            # 反爬蟲偽裝
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+            chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
 
-            logger.info("正在初始化 Chrome Driver (v2)...")
-            
-            # 自動安裝並設定 Driver
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=chrome_options)
+            
+            # 設定較短的超時，避免卡死
+            driver.set_page_load_timeout(20)
+            driver.set_script_timeout(20)
+            
+            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             return driver
 
-        def scrape_google_news(self, keyword: str = "ASUS router security") -> List[Dict]:
+        def close(self):
+            try:
+                if self.driver:
+                    self.driver.quit()
+                    logger.info("爬蟲已結束並關閉")
+            except:
+                pass
+
+        def is_relevant(self, title: str, content: str = "") -> bool:
+            """中英文關鍵字過濾"""
+            text_to_check = (title + " " + content).lower()
+            if "asus" not in text_to_check and "華碩" not in text_to_check:
+                return False
+            
+            router_keywords = ["router", "rt-", "gt-", "zenwifi", "aimesh", "tuf gaming", "rog rapture", "路由器", "分享器", "網通", "wifi"]
+            security_keywords = ["security", "vulnerability", "cve", "exploit", "hack", "patch", "firmware", "backdoor", "botnet", "malware", "cyber", "attack", "warn", "alert", "risk", "資安", "漏洞", "駭客", "攻擊", "更新", "修補", "韌體", "後門", "惡意", "殭屍", "安全", "風險"]
+            
+            has_router = any(kw in text_to_check for kw in router_keywords)
+            has_security = any(kw in text_to_check for kw in security_keywords)
+            
+            # 寬鬆模式：只要沾上一邊就算相關
+            return has_router or has_security
+
+        def read_article_content(self, url: str) -> str:
+            if url.lower().endswith('.pdf'): return "PDF 文件連結"
+            
+            # 最多重試 1 次 (遇到 Driver 死掉時重啟)
+            for attempt in range(2):
+                try:
+                    if not self.driver: self._init_driver()
+
+                    logger.info(f"正在閱讀內文: {url[:50]}...")
+                    
+                    try:
+                        self.driver.get(url)
+                    except TimeoutException:
+                        # Eager 模式下超時通常沒關係，文字應該都到了
+                        try: self.driver.execute_script("window.stop();")
+                        except: pass
+                    
+                    time.sleep(random.uniform(1.0, 2.0))
+
+                    # --- [新增] 檢查 404 / Page Not Found ---
+                    try:
+                        page_source = self.driver.page_source.lower()
+                        if "404" in self.driver.title or "page not found" in page_source or "404 not found" in page_source:
+                            logger.warning(f"偵測到無效頁面 (404/Not Found): {url}")
+                            return "無效連結 (404 Page Not Found)"
+                    except:
+                        pass
+                    # -------------------------------------
+
+                    paragraphs = self.driver.find_elements(By.TAG_NAME, "p")
+                    content = [p.text.strip() for p in paragraphs if len(p.text.strip()) > 30]
+                    if content: return " ".join(content)[:300] + "..."
+
+                    try:
+                        body = self.driver.find_element(By.TAG_NAME, "body")
+                        clean_text = " ".join(body.text.split())
+                        if len(clean_text) > 50: return clean_text[:300] + "..."
+                    except: pass
+                    
+                    return "無法提取有效文字"
+
+                except Exception as e:
+                    error_msg = str(e)
+                    # 智慧偵測死機
+                    if "HTTPConnectionPool" in error_msg or "refused" in error_msg or "invalid session" in error_msg:
+                        logger.warning(f"偵測到瀏覽器崩潰，正在重啟 Driver...")
+                        self._init_driver()
+                        time.sleep(2)
+                        continue 
+                    
+                    logger.warning(f"閱讀失敗: {error_msg[:50]}")
+                    return "讀取失敗"
+            
+            return "讀取失敗"
+
+        def scrape_google_search(self, query: str, source_category: str, search_type: str = 'news', lang: str = 'en') -> List[Dict]:
+            """
+            [修正] 這裡加入了 lang 參數，解決 TypeError
+            """
             results = []
             try:
-                # 加入時間篩選參數 &tbs=qdr:m6 (最近 6 個月)
-                url = f"https://www.google.com/search?q={keyword}&tbm=nws&tbs=qdr:m6"
-                logger.info(f"前往 URL: {url}")
+                if not self.driver: self._init_driver()
+
+                # 根據 lang 決定介面語言 (hl=en 或 hl=zh-TW)
+                base_url = "https://www.google.com/search?q={}&hl={}"
                 
-                self.driver.get(url)
+                if search_type == 'news':
+                    url = base_url.format(query, lang) + "&tbm=nws&tbs=qdr:m6"
+                else:
+                    url = base_url.format(query, lang) + "&tbs=qdr:y"
+
+                logger.info(f"[{source_category} | {lang}] 前往搜尋: {url}")
                 
-                # 隨機延遲，模擬人類閱讀 (Anti-Scraping)
-                sleep_time = random.uniform(2, 5)
-                logger.info(f"隨機延遲: 等待 {sleep_time:.2f} 秒...")
-                time.sleep(sleep_time)
+                try:
+                    self.driver.get(url)
+                except:
+                    try: self.driver.execute_script("window.stop();")
+                    except: pass
 
-                # 等待新聞區塊載入 (最多等 15 秒)
-                WebDriverWait(self.driver, 15).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "div.SoaBEf"))
-                )
+                time.sleep(3) # 等待渲染
 
-                articles = self.driver.find_elements(By.CSS_SELECTOR, "div.SoaBEf")
-                logger.info(f"找到 {len(articles)} 篇相關新聞")
-
-                for article in articles:
+                # 捲動載入
+                for _ in range(2):
                     try:
-                        title_elem = article.find_element(By.CSS_SELECTOR, "div[role='heading']")
-                        link_elem = article.find_element(By.TAG_NAME, "a")
-                        date_elem = article.find_element(By.CSS_SELECTOR, ".OSrXXb span")
+                        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                        time.sleep(2)
+                    except: 
+                        self._init_driver()
+                        break
+
+                try:
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "search")))
+                except: pass
+
+                if search_type == 'news':
+                    items = self.driver.find_elements(By.CSS_SELECTOR, "div.SoaBEf")
+                    if not items: items = self.driver.find_elements(By.CSS_SELECTOR, "div.MjjYud")
+                else:
+                    items = self.driver.find_elements(By.CSS_SELECTOR, "div.g")
+
+                logger.info(f"[{source_category}] 找到 {len(items)} 筆原始資料")
+
+                valid_count = 0
+                for item in items:
+                    try:
+                        if search_type == 'news':
+                            title_elem = item.find_element(By.CSS_SELECTOR, "div[role='heading']")
+                        else:
+                            title_elem = item.find_element(By.TAG_NAME, "h3")
                         
-                        # 嘗試抓取摘要
-                        try:
-                            desc_elem = article.find_element(By.CSS_SELECTOR, ".GI74Re")
-                            description = desc_elem.text
-                        except:
-                            description = ""
-
-                        title = title_elem.text
+                        link_elem = item.find_element(By.TAG_NAME, "a")
                         link = link_elem.get_attribute("href")
-                        date_str = date_elem.text
+                        title = title_elem.text
 
-                        # 簡單過濾
-                        if "ASUS" in title.upper() or "華碩" in title:
-                            results.append({
-                                "title": title,
-                                "url": link,
-                                "date_raw": date_str,
-                                "source": "Google News",
-                                "description": description
-                            })
-                    except Exception as e:
-                        # 單篇失敗不影響整體
+                        snippet = ""
+                        try:
+                            desc_elem = item.find_element(By.CSS_SELECTOR, ".GI74Re, .VwiC3b")
+                            snippet = desc_elem.text
+                        except: pass
+
+                        if not self.is_relevant(title, snippet):
+                            continue
+
+                        date_str = "Today"
+                        try:
+                            date_elem = item.find_element(By.CSS_SELECTOR, ".OSrXXb span, .MUxGbd, .LEwnzc span") 
+                            date_str = date_elem.text
+                        except: pass
+
+                        results.append({
+                            "title": title,
+                            "url": link,
+                            "date_raw": date_str,
+                            "source": source_category,
+                            "description": snippet
+                        })
+                        valid_count += 1
+                    except:
                         continue
+                
+                logger.info(f"[{source_category}] 保留 {valid_count} 筆有效資料")
 
             except Exception as e:
-                logger.error(f"爬蟲執行期間發生錯誤: {e}")
-                # 如果是 Timeout，可能是被 Google 擋了，建議保留截圖 (進階功能)
-                # self.driver.save_screenshot("error_screenshot.png")
-                
-            finally:
-                try:
-                    self.driver.quit()
-                    logger.info("瀏覽器已關閉")
-                except:
-                    pass
+                logger.error(f"[{source_category}] 搜尋錯誤: {e}")
+                self._init_driver()
             
             return results
 
@@ -367,70 +478,259 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
 
     def parse_relative_date(date_str: str) -> str:
         """
-        將 Google News 的相對時間 (e.g., '3 天前', '1 週前') 
+        將 Google News 的時間字串 (支援英文與中文格式) 
         轉換為標準日期格式 (YYYY-MM-DD)。
         """
         today = datetime.now()
+        date_str = date_str.strip()
         
         try:
-            # 去除前後空白
-            date_str = date_str.strip()
+            # --- 英文格式處理 (English) ---
+            
+            # 處理 "3 days ago", "5 mins ago", "2 weeks ago"
+            if 'ago' in date_str.lower():
+                # 提取數字
+                num_match = re.search(r'(\d+)', date_str)
+                number = int(num_match.group(1)) if num_match else 0
+                
+                if 'min' in date_str or 'hour' in date_str:
+                    return today.strftime("%Y-%m-%d")
+                elif 'day' in date_str:
+                    dt = today - timedelta(days=number)
+                    return dt.strftime("%Y-%m-%d")
+                elif 'week' in date_str:
+                    dt = today - timedelta(weeks=number)
+                    return dt.strftime("%Y-%m-%d")
+                elif 'month' in date_str:
+                    dt = today - timedelta(days=number*30)
+                    return dt.strftime("%Y-%m-%d")
 
-            # 處理 "2025年5月28日" 這種絕對日期
+            # 處理 "Yesterday"
+            if 'Yesterday' in date_str:
+                dt = today - timedelta(days=1)
+                return dt.strftime("%Y-%m-%d")
+
+            # 處理絕對日期 "Jul 19, 2025", "July 19, 2025", "19 July 2025"
+            # 嘗試多種英文日期格式
+            for fmt in ["%b %d, %Y", "%B %d, %Y", "%d %b %Y", "%d %B %Y"]:
+                try:
+                    dt = datetime.strptime(date_str, fmt)
+                    return dt.strftime("%Y-%m-%d")
+                except ValueError:
+                    continue
+
+            # --- 中文格式處理 (Chinese) ---
+            
             if "年" in date_str and "月" in date_str:
                 dt = datetime.strptime(date_str, "%Y年%m月%d日")
                 return dt.strftime("%Y-%m-%d")
 
-            # 處理 "X 天前"
             days_match = re.search(r'(\d+)\s*天前', date_str)
             if days_match:
                 days = int(days_match.group(1))
                 dt = today - timedelta(days=days)
                 return dt.strftime("%Y-%m-%d")
 
-            # 處理 "X 週前"
             weeks_match = re.search(r'(\d+)\s*週前', date_str)
             if weeks_match:
                 weeks = int(weeks_match.group(1))
                 dt = today - timedelta(weeks=weeks)
                 return dt.strftime("%Y-%m-%d")
-
-            # 處理 "X 小時前" (視為今天)
-            hours_match = re.search(r'(\d+)\s*小時前', date_str)
-            if hours_match:
-                return today.strftime("%Y-%m-%d")
                 
-            # 處理 "昨天"
             if "昨天" in date_str:
                 dt = today - timedelta(days=1)
                 return dt.strftime("%Y-%m-%d")
 
-            # 若都無法解析，回傳今天 (或你可以選擇拋出錯誤)
+            # 若都無法解析，回傳今天 (但也印出錯誤以便除錯)
+            # print(f"Warning: 無法解析日期 '{date_str}'，預設為今天")
             return today.strftime("%Y-%m-%d")
 
         except Exception as e:
             print(f"日期解析失敗: {date_str}, 錯誤: {e}")
             return today.strftime("%Y-%m-%d")
 
-3.請將以下內容複製到 app/database.py，建立連線資料庫及寫入
+3.請將以下內容複製到 app/main.py，更新主程式
+    import logging
+    import time
+    import os
+    import gc
+    from datetime import datetime, timedelta, timezone
+    from scraper import NewsScraper
+    from database import Database
+    from utils import parse_relative_date
+    from form_filler import FormFiller
+    from logger import logger
+
+    # logging.basicConfig(
+    #     level=logging.INFO, 
+    #     format='%(asctime)s - [%(levelname)s] - %(message)s',
+    #     datefmt='%Y-%m-%d %H:%M:%S'
+    # )
+    # logger = logging.getLogger(__name__)
+
+    # 多源搜尋設定
+    # 注意：這裡雖然移除了 lang 參數，但透過調整 query 關鍵字
+    # 依然可以搜尋到不同語言的結果 (例如搜尋中文關鍵字就會找到中文新聞)
+    SEARCH_CONFIGS = [
+        {
+            "category": "Google News (EN)",
+            "query": "ASUS router security", # 英文關鍵字 -> 傾向找英文結果
+            "type": "news"
+        },
+        {
+            "category": "Google News (TW)",
+            "query": "華碩 路由器 資安", # 中文關鍵字 -> 傾向找中文結果
+            "type": "news"
+        },
+        {
+            "category": "官方資源",
+            "query": "site:asus.com security router",
+            "type": "web"
+        },
+        {
+            "category": "資安通報", 
+            "query": "site:bleepingcomputer.com OR site:thehackernews.com ASUS",
+            "type": "news"
+        }
+    ]
+
+    def process_scraping_job():
+        logger.info("=== 階段一: 雙語多源爬蟲啟動 ===")
+        scraper = NewsScraper()
+        
+        try:
+            all_news_data = []
+            
+            for config in SEARCH_CONFIGS:
+                logger.info(f"執行任務: {config['category']}...")
+                
+                # [修正重點] 呼叫時移除 lang 參數
+                # 這樣就不會觸發 TypeError，因為舊版 scraper 本來就不收這個參數
+                raw_data = scraper.scrape_google_search(
+                    query=config['query'],
+                    source_category=config['category'],
+                    search_type=config['type']
+                    # lang=config['lang']  <-- 已移除此行
+                )
+                
+                all_news_data.extend(raw_data[:5])
+                time.sleep(2)
+
+            if not all_news_data:
+                logger.warning("未找到任何資料。")
+                return
+
+            logger.info(f"搜尋完成，共 {len(all_news_data)} 筆，開始閱讀內文...")
+            
+            cleaned_data = []
+            tw_tz = timezone(timedelta(hours=8))
+            capture_time = datetime.now(tw_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+            for item in all_news_data:
+                deep_content = scraper.read_article_content(item['url'])
+                
+                final_desc = "無摘要"
+                if deep_content and len(deep_content) > 30 and "失敗" not in deep_content:
+                    final_desc = deep_content
+                elif item.get('description'):
+                    final_desc = f"[Google摘要] {item['description']}"
+                
+                std_date = parse_relative_date(item['date_raw'])
+                
+                cleaned_data.append({
+                    'title': item['title'].strip(),
+                    'url': item['url'],
+                    'publish_date': std_date,
+                    'source': item['source'],
+                    'description': final_desc,
+                    'captured_at': capture_time 
+                })
+
+            db = Database()
+            new_count = db.insert_news(cleaned_data)
+            logger.info(f"階段一結束。資料庫實際新增: {new_count} 筆。")
+            
+        except Exception as e:
+            logger.error(f"爬蟲階段發生錯誤: {e}")
+        finally:
+            scraper.close()
+            del scraper
+            gc.collect()
+
+    def process_form_filling_job():
+        logger.info("=== 階段二: 填寫表單 (Status='N') ===")
+        db = Database()
+        pending_tasks = db.get_pending_news()
+        
+        if not pending_tasks:
+            logger.info("沒有待處理資料。")
+            return
+
+        logger.info(f"發現 {len(pending_tasks)} 筆任務，啟動填表機器人...")
+        
+        for i, task in enumerate(pending_tasks):
+            news_id = task['id']
+            title = task['title']
+            logger.info(f"[{i+1}/{len(pending_tasks)}] 填寫中: {title[:15]}...")
+
+            filler = None
+            try:
+                filler = FormFiller()
+                is_success = filler.fill_form(task)
+                
+                if is_success:
+                    db.update_status(news_id, 'Y')
+                    logger.info(f"-> 成功 (ID {news_id})")
+                else:
+                    raise Exception("提交失敗")
+
+            except Exception as e:
+                logger.error(f"-> 失敗 (ID {news_id}): {e}")
+                db.record_failure(news_id)
+            finally:
+                if filler:
+                    try: filler.driver.quit()
+                    except: pass
+                del filler
+                gc.collect()
+                time.sleep(3)
+
+    def main():
+        try:
+            time.sleep(2)
+            process_scraping_job()
+            gc.collect()
+            time.sleep(2)
+            process_form_filling_job()
+            logger.info("=== 全部完成 ===")
+        except Exception as e:
+            logger.critical(f"主程式崩潰: {e}")
+
+    if __name__ == "__main__":
+        main()
+
+4.請將以下內容複製到 app/database.py，更新資料庫模組
     import mysql.connector
     import os
     import logging
     from typing import List, Dict, Optional
+    from logger import logger
 
     # 設定 logger
-    logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
 
     class Database:
         def __init__(self):
-            # 從環境變數讀取連線資訊 (Docker Compose 裡設定的)
             self.config = {
                 'user': os.getenv('DB_USER', 'scraper_user'),
                 'password': os.getenv('DB_PASSWORD', 'scraper_password'),
                 'host': os.getenv('DB_HOST', 'mysql-db'),
                 'database': os.getenv('DB_NAME', 'security_news'),
-                'raise_on_warnings': False,
-                'autocommit': False # 我們手動 commit 以確保交易完整性
+                # ==========================================
+                # 關鍵修正：必須設為 False，否則重複資料會導致全部回滾
+                # ==========================================
+                'raise_on_warnings': False,  
+                'autocommit': False 
             }
 
         def get_connection(self):
@@ -438,11 +738,6 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
             return mysql.connector.connect(**self.config)
 
         def insert_news(self, news_list: List[Dict]) -> int:
-            """
-            流程圖步驟 3 & 4: 寫入資料並去重
-            - 使用 INSERT IGNORE 忽略已存在的 (title + publish_date)
-            - 預設 status 為 'N'
-            """
             if not news_list:
                 return 0
 
@@ -454,7 +749,6 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                 conn = self.get_connection()
                 cursor = conn.cursor()
 
-                # SQL 語法: 若複合鍵重複則忽略，否則插入新資料
                 sql = """
                 INSERT IGNORE INTO news (title, url, publish_date, source, description, status, fail_count)
                 VALUES (%s, %s, %s, %s, %s, 'N', 0)
@@ -466,23 +760,23 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                         item['url'],
                         item['publish_date'],
                         item['source'],
-                        item.get('description', '')  # 取得摘要，若無則為空字串
+                        item.get('description', '')
                     )
                     cursor.execute(sql, val)
                     
-                    # 檢查這筆是否真的寫入 (rowcount > 0 代表成功插入，0 代表被 IGNORE)
                     if cursor.rowcount > 0:
                         inserted_count += 1
-                    else:
-                        logger.debug(f"Duplicate found (Skipped): {item['title'][:30]}...")
-
+                
+                # 這一行是將資料寫入硬碟的關鍵
                 conn.commit()
-                logger.info(f"[DB] 批次作業結束: 輸入 {len(news_list)} 筆 -> 實際新增 {inserted_count} 筆 (重複 {len(news_list)-inserted_count} 筆)")
+                logger.info(f"[DB] 批次作業結束: 輸入 {len(news_list)} 筆 -> 實際新增 {inserted_count} 筆")
 
             except mysql.connector.Error as err:
+                # 只有當發生 "嚴重錯誤" (如連線斷掉) 時才 rollback
+                # 因為 raise_on_warnings=False，重複資料不會跑進這裡
                 logger.error(f"[DB Error] 寫入失敗: {err}")
                 if conn:
-                    conn.rollback()
+                    conn.rollback()  # <--- 你的資料就是在這裡消失的
             finally:
                 if cursor: cursor.close()
                 if conn and conn.is_connected(): conn.close()
@@ -572,150 +866,181 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                 if cursor: cursor.close()
                 if conn and conn.is_connected(): conn.close()
 
-4.請將以下內容複製到 app/main.py，更新主程式
+5.請將以下內容複製到 app/form_filler.py，更新Google Form 填表器
     import logging
-    import time
-    import random
     import os
-    from datetime import datetime  # <--- [新增] 用於紀錄擷取時間
-    from scraper import NewsScraper
-    from database import Database
-    from utils import parse_relative_date
-    from form_filler import FormFiller  # <--- [重要] 引入填表模組
+    import time
+    from datetime import datetime, timedelta
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.chrome.service import Service
+    from selenium.webdriver.chrome.options import Options
+    from webdriver_manager.chrome import ChromeDriverManager
+    from logger import logger
 
-    # 設定全域 Log 格式
-    logging.basicConfig(
-        level=logging.INFO, 
-        format='%(asctime)s - [%(levelname)s] - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
 
-    def process_scraping_job():
-        """
-        [Phase 1] 爬蟲與入庫流程
-        對應流程圖: 爬蟲 -> 資料清洗 -> 寫入資料庫(判斷是否存在)
-        """
-        logger.info("=== 階段一: 啟動爬蟲作業 ===")
-        
-        # 1. 初始化爬蟲
-        scraper = NewsScraper()
-        keyword = "ASUS router security"
-        
-        # 2. 執行爬取
-        logger.info(f"正在搜尋關鍵字: {keyword}")
-        raw_data = scraper.scrape_google_news(keyword)
-        
-        if not raw_data:
-            logger.warning("本次未抓取到任何資料，跳過入庫流程。")
-            return
-
-        # 3. 資料清洗 (Data Cleaning) - [針對流程圖需求強化]
-        logger.info("正在清洗資料格式 (日期標準化 & 去除空白)...")
-        cleaned_data = []
-        
-        # [新增] 統一設定本次批次的「擷取時間」
-        capture_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        for item in raw_data:
-            # [清洗 1] 日期標準化: "3 天前" -> "2023-12-05"
-            std_date = parse_relative_date(item['date_raw'])
+    class FormFiller:
+        def __init__(self):
+            self.form_url = os.getenv('GOOGLE_FORM_URL')
+            if not self.form_url:
+                raise ValueError("環境變數 GOOGLE_FORM_URL 未設定！")
             
-            # [清洗 2] 文字清洗: 移除前後空白/換行 (符合流程圖 "移除空白" 要求)
-            clean_title = item['title'].strip()
-            clean_desc = item.get('description', '').strip()
+            self.driver = self._setup_driver()
+
+        def _setup_driver(self) -> webdriver.Chrome:
+            chrome_options = Options()
+            chrome_options.add_argument("--headless=new") 
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
             
-            # 整理符合要求的六大欄位:
-            # 1. 來源網站 (source)
-            # 2. 標題 (title)
-            # 3. 發布日期 (publish_date)
-            # 4. 內文摘要/重點 (description)
-            # 5. 原始連結 (url)
-            # 6. 擷取時間 (captured_at) - [新增]
-            cleaned_data.append({
-                'title': clean_title,
-                'url': item['url'],
-                'publish_date': std_date,
-                'source': item['source'],
-                'description': clean_desc,
-                'captured_at': capture_time 
-            })
+            # --- [記憶體優化關鍵參數] ---
+            chrome_options.add_argument("--blink-settings=imagesEnabled=false") # 不載入圖片
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--disable-extensions")
+            chrome_options.add_argument("--disable-notifications")
+            chrome_options.add_argument("--disable-application-cache")
+            chrome_options.add_argument("--window-size=1920,1080")
+            
+            # 反偵測
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+            chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
-        # 4. 寫入資料庫 (Insert & Deduplicate)
-        db = Database()
-        new_count = db.insert_news(cleaned_data)
-        logger.info(f"階段一結束。資料庫新增: {new_count} 筆。")
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            return driver
 
-
-    def process_form_filling_job():
-        """
-        [Phase 2] 自動填表流程
-        對應流程圖: 檢查狀態 'N' -> 填寫 Google 表單 -> 成功更新 'Y' / 失敗記數
-        """
-        logger.info("=== 階段二: 檢查待填寫資料 (Status='N') ===")
-        db = Database()
-        
-        # 5. 從 DB 撈出所有 Status = 'N' 的資料
-        pending_tasks = db.get_pending_news()
-        
-        if not pending_tasks:
-            logger.info("沒有新資料需要填寫 (All caught up)。")
-            return
-
-        logger.info(f"發現 {len(pending_tasks)} 筆待處理任務，準備開始填表...")
-
-        # 初始化填表器 (建議在迴圈外初始化 driver，這裡為求簡單每次重啟)
-        # 若要優化效能，可將 FormFiller 放在迴圈外，但需確保它能處理多筆提交
-        
-        for task in pending_tasks:
-            news_id = task['id']
-            title = task['title']
-            logger.info(f"正在處理任務 ID:{news_id} | 標題: {title[:20]}...")
-
-            filler = None
+        def _smart_fill(self, element, value):
             try:
-                # --- 6. 執行填表邏輯 (正式版) ---
-                filler = FormFiller() # 初始化瀏覽器
-                is_success = filler.fill_form(task) # 執行自動填寫
-                
-                if is_success:
-                    # 7. 成功流程: 更新狀態為 'Y'
-                    db.update_status(news_id, 'Y')
-                    logger.info(f"-> 任務成功 (ID {news_id})")
+                element.clear()
+                element.send_keys(value)
+            except Exception:
+                self.driver.execute_script("""
+                    arguments[0].value = arguments[1];
+                    arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+                    arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+                """, element, value)
+
+        def fill_form(self, data: dict) -> bool:
+            try:
+                self.driver.get(self.form_url)
+                wait = WebDriverWait(self.driver, 20)
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[role="listitem"]')))
+
+                inputs = self.driver.find_elements(By.CSS_SELECTOR, "input.whsOnd")
+                if not inputs:
+                    inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='text']")
+                textareas = self.driver.find_elements(By.TAG_NAME, 'textarea')
+
+                if len(inputs) >= 5:
+                    self._smart_fill(inputs[0], data['title'])
+                    self._smart_fill(inputs[1], data['url'])
+                    self._smart_fill(inputs[2], str(data['publish_date']))
+                    self._smart_fill(inputs[3], data['source'])
+
+                    # 時區校正 (UTC -> UTC+8)
+                    raw_time = data.get('created_at') or data.get('captured_at')
+                    if not raw_time: raw_time = datetime.now()
+                    if isinstance(raw_time, str):
+                        try: raw_time = datetime.strptime(raw_time, '%Y-%m-%d %H:%M:%S')
+                        except: raw_time = datetime.now()
+
+                    tw_time = raw_time + timedelta(hours=8)
+                    self._smart_fill(inputs[4], tw_time.strftime('%Y-%m-%d %H:%M:%S'))
+                    
+                    if textareas and 'description' in data:
+                        desc = data['description'][:800] 
+                        self._smart_fill(textareas[0], desc)
+                    
+                    # 提交
+                    submit_btn = None
+                    candidates = self.driver.find_elements(By.XPATH, "//div[@role='button']//span[text()='提交' or text()='Submit']")
+                    if candidates:
+                        submit_btn = candidates[0].find_element(By.XPATH, "./../..")
+                    else:
+                        submit_btn = self.driver.find_element(By.XPATH, "//div[@role='button' and (descendant::span[text()='提交'] or descendant::span[text()='Submit'])]")
+
+                    self.driver.execute_script("arguments[0].scrollIntoView(true);", submit_btn)
+                    time.sleep(1)
+                    self.driver.execute_script("arguments[0].click();", submit_btn)
+                    
+                    wait.until(EC.presence_of_element_located((By.XPATH, '//div[contains(text(), "已記錄") or contains(text(), "recorded") or contains(text(), "response")]')))
+                    return True
                 else:
-                    # 失敗流程
-                    raise Exception("Google 表單提交驗證失敗 (找不到成功訊息)")
+                    logger.error(f"欄位不足: {len(inputs)}")
+                    return False
 
             except Exception as e:
-                logger.error(f"-> 任務失敗 (ID {news_id}): {e}")
-                # 失敗迴圈: 記數 +1，若超過 3 次則標記為 'E'
-                db.record_failure(news_id)
-            finally:
-                # 確保每次填完都關閉瀏覽器 (避免記憶體洩漏)
-                if filler and hasattr(filler, 'driver'):
-                    try:
-                        filler.driver.quit()
-                    except:
-                        pass
+                logger.error(f"填表失敗: {str(e)[:100]}")
+                return False
 
-    def main():
-        try:
-            # 為了確保 DB 容器已完全啟動
-            time.sleep(2)
-            
-            # 執行完整工作流
-            process_scraping_job()
-            process_form_filling_job()
-            
-            logger.info("=== 所有自動化作業執行完畢 ===")
-            
-        except Exception as e:
-            logger.critical(f"主程式發生未預期崩潰: {e}")
+6.請將以下內容複製到 app/logger.py，更新日誌設定模組
+    import logging
+    import os
+    import sys
+    from logging.handlers import TimedRotatingFileHandler
+    from datetime import datetime
 
-    if __name__ == "__main__":
-        main()
+    # 定義日誌資料夾
+    LOG_DIR = "logs"
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
 
-5.在 Docker 裡面測試爬蟲
+    # 定義日誌格式
+    FORMATTER_STRING = "%(asctime)s - [%(levelname)s] - %(filename)s:%(lineno)d - %(message)s"
+    DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+    class LoggerSetup:
+        def __init__(self):
+            self.logger = logging.getLogger("AsusNewsBot")
+            self.logger.setLevel(logging.INFO)
+            
+            # 防止重複添加 Handler (避免 Log 重複印出)
+            if not self.logger.handlers:
+                self._add_console_handler()
+                self._add_file_handler()
+
+        def _add_console_handler(self):
+            """新增終端機輸出"""
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setLevel(logging.INFO)
+            formatter = logging.Formatter(FORMATTER_STRING, datefmt=DATE_FORMAT)
+            console_handler.setFormatter(formatter)
+            self.logger.addHandler(console_handler)
+
+        def _add_file_handler(self):
+            """新增檔案輸出 (每天輪替，檔名包含日期)"""
+            # 為了讓檔名一開始就包含日期，我們在初始化時就設定好基礎檔名
+            # 例如: logs/app_2023-12-06.log
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            filename = os.path.join(LOG_DIR, f"app_{current_date}.log")
+            
+            # 使用 TimedRotatingFileHandler
+            # when="midnight": 每天午夜輪替
+            # interval=1: 每 1 天
+            # backupCount=7: 保留最近 7 個檔案
+            # encoding="utf-8": 確保中文不亂碼
+            file_handler = TimedRotatingFileHandler(
+                filename, when="midnight", interval=1, backupCount=7, encoding="utf-8"
+            )
+            
+            # 設定輪替後的檔名後綴格式 (雖然我們基礎檔名已有日期，但這是輪替機制的標準設定)
+            file_handler.suffix = "%Y-%m-%d.log" 
+            file_handler.setLevel(logging.INFO)
+            
+            formatter = logging.Formatter(FORMATTER_STRING, datefmt=DATE_FORMAT)
+            file_handler.setFormatter(formatter)
+            self.logger.addHandler(file_handler)
+
+        def get_logger(self):
+            return self.logger
+
+    # 初始化並匯出 logger 實例
+    # 其他檔案只需: from logger import logger 即可使用
+    logger = LoggerSetup().get_logger()
+
+7.在 Docker 裡面測試爬蟲
   docker exec -it asus_news_worker python app/main.py
-  應該會看到 Log 顯示類似： [DB] 批次作業結束: 輸入 9 筆 -> 實際新增 8 筆 (重複 1 筆)
-  這就代表那 8 筆成功寫入，而重複的 1 筆被安全地忽略了。
+  會看到 Log 顯示：  === 全部完成 ===

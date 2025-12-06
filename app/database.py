@@ -2,9 +2,10 @@ import mysql.connector
 import os
 import logging
 from typing import List, Dict, Optional
+from logger import logger
 
 # 設定 logger
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
