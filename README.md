@@ -1,15 +1,49 @@
-ASUS Router News Automation
-這是一個端到端的自動化面試專案。目標是爬取 ASUS Router 相關資安新聞，存入 MySQL 資料庫，並自動填寫至 Google 表單。
+ASUS Router Security News Automation
+這是一個端到端的資安新聞自動化蒐集系統。
+專案目標是從多個來源（Google News、官方公告、資安論壇）爬取 ASUS Router 相關資安威脅，經過清洗與去重後存入 MySQL，最後自動填寫至 Google 表單以進行通報。
+
+🌟 專案亮點
+本專案包含許多針對 瀏覽器自動化 (Browser Automation) 的進階工程實踐：
+全 Selenium 架構：捨棄易被阻擋的 Requests，搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。
+高穩定性設計 (Resilience)：
+Eager Loading 策略：大幅縮短頁面載入等待時間，防止爬蟲卡死。
+Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。
+記憶體管理：實作 gc.collect() 與主動關閉 Driver，配合 shm_size 優化，防止 Docker OOM。
+精準過濾 (Precision)：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。
+智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動 (Not Interactable) 的問題。
 
 🛠 技術堆疊 (Tech Stack)
-- **Language**: Python 3.14.1
-- **Database**: MySQL 8.0 (Dockerized)
-- **Scraper**: Requests + BeautifulSoup
-- **Automation**: Selenium WebDriver
-- **Infrastructure**: Docker & Docker Compose
+**Language**: Python 3.9+
+**Database**: MySQL 8.0 (Dockerized)
+**Core Library**: Selenium WebDriver (Headless Chrome)
+**Infrastructure**: Docker & Docker Compose
+**Features**:
+Multi-source Scraping (Google News EN/TW, Official Sites)
+Timezone Correction (UTC+8)
+Automatic Log Rotation (日誌輪替，按日儲存)
+404 & PDF Detection (無效連結過濾)
 
+📂 專案結構
+asus-news/
+├── app/
+│   ├── main.py             # 主程式 (負責排程、多源搜尋邏輯)
+│   ├── scraper.py          # 爬蟲核心 (含反偵測、重啟機制、Eager模式)
+│   ├── form_filler.py      # 填表機器人 (含 JS 注入、時區校正)
+│   ├── database.py         # 資料庫操作 (含去重邏輯)
+│   ├── logger.py           # 日誌模組 (支援輪替與雙重輸出)
+│   └── utils.py            # 工具包 (日期解析)
+├── db/
+│   └── init.sql            # 資料庫初始化腳本
+├── logs/                   # 執行日誌 (自動生成，按日輪替)
+├── .env                    # 環境變數設定 (需自行建立)
+├── docker-compose.yml      # 容器編排設定 (含記憶體優化)
+├── Dockerfile              # Python 環境定義
+└── requirements.txt        # 套件清單
+
+================================================================================================
 🚀 環境建置 (Windows 開發環境)
-第 0 階段：安裝編輯器 (Cursor、Docker)
+※如果你是第一次在 Windows 上執行Cursor、Python、Docker，請依照以下步驟設定環境。
+第 0 階段：安裝編輯器 (Cursor、Docker、Python)
 1.下載 Cursor 作為程式碼編輯器
   前往 Cursor 官網，下載安裝檔。
   執行安裝程式，並依照指示完成安裝。
@@ -18,28 +52,24 @@ ASUS Router News Automation
   前往 Docker 官網，下載安裝檔。
   執行安裝程式，並依照指示完成安裝。
 
-------------------------------------------------------------------------------------------------
-※如果你是第一次在 Windows 上執行此專案，請依照以下步驟設定 Python 虛擬環境。
-
-第 1 階段：在電腦上安裝 Python (引擎)
-1. 開啟 Cursor 的終端機，檢查python是否已安裝
+3. 開啟 Cursor 的終端機，檢查python是否已安裝
     python --version 或 py --version 或 python3 --version
 
-2.下載與安裝
+4.下載與安裝python
   前往 Python 官網下載頁面。
   點擊黃色按鈕 Download Python 3.x.x。
   ※執行下載的安裝檔 (⚠️ 重要)
   務必勾選最下方的 ☑️ Add Python.exe to PATH (將 Python 加入環境變數)。
   點選 Install Now 完成安裝。
 
-3.打開 Cursor
+5.打開 Cursor
   點擊左側邊欄的「方塊圖示」 (Extensions)。
   搜尋 Python。
   找到由 Microsoft 開發的那個（通常下載量最高），點擊 Install。 (這個套件會幫你做語法高亮、程式碼補全、還能幫你選虛擬環境)
 
-4.安裝完成後回到步驟1，檢查是否安裝成功，安裝成功後，接續5.開啟專案資料夾。
+6.安裝完成後回到步驟1，檢查是否安裝成功，安裝成功後，接續7.開啟專案資料夾。
 
-5.開啟專案資料夾
+7.開啟專案資料夾
   在電腦桌面或你習慣的地方，建立一個新資料夾，命名為 asus-news。
   在 Cursor 中，點選 File -> Open Folder，選擇這個資料夾。
 
@@ -55,12 +85,6 @@ ASUS Router News Automation
        python -m venv .venv
   (2). 啟動虛擬環境 (每次重開 Cursor 都要確認前面有 (.venv) 字樣，通常 Cursor 會自動偵測)
        .venv\Scripts\activate
-
-  Mac / Linux:
-  (1). 建立虛擬環境
-       python3 -m venv .venv
-  (2). 啟動虛擬環境
-       source .venv/bin/activate
 
 註:
 Q:如果遇到.venv\Scripts\activate錯誤為Windows PowerShell 安全性限制問題
@@ -130,20 +154,22 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
         UNIQUE KEY unique_news_check (title, publish_date)
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-    -- 3. 建立執行紀錄表 (Optional: 用於紀錄每次 Script 執行狀況)
-    CREATE TABLE IF NOT EXISTS execution_logs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        execution_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-        total_processed INT DEFAULT 0,
-        success_count INT DEFAULT 0,
-        error_count INT DEFAULT 0,
-        log_message TEXT
-    );
+    📊 資料庫 news_Schema
+    欄位	        類型	    說明
+    id	            INT	        Primary Key
+    title	        VARCHAR	    新聞標題
+    url	            VARCHAR	    原始連結
+    publish_date	DATE	    發布日期 (標準化 YYYY-MM-DD)
+    source	        VARCHAR	    來源分類 (如: Google News (TW))
+    description	    TEXT	    內文摘要 (優先使用內文，備用 Google Snippet)
+    status	        CHAR(1)	    N(新), Y(完), E(錯)
+    fail_count	    INT	        失敗重試次數
+    created_at	    TIMESTAMP	擷取時間 (UTC，填表時會自動轉 +8)
 
   (4)建立暫時的 Dockerfile (docker-compose.yml 裡面參照了 build: .，需要一個 Dockerfile 才能跑)
      a.在專案根目錄建立 Dockerfile。
-     b.貼上以下內容：
-       # 使用 Python 3.9 Slim
+     b.在Dockerfile貼上以下內容：
+        # 使用 Python 3.9 Slim
         FROM python:3.9-slim
 
         # 設定環境變數
@@ -189,19 +215,38 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
 
         # 5. 預設指令
         CMD ["tail", "-f", "/dev/null"]
+     
+     c.在.env貼上以下內容，做環境設定
+        # --- 資料庫連線設定 (必須與 docker-compose.yml 一致) ---
+        # 注意: 在 Docker 內部互連時，HOST 必須是 docker-compose 裡的 service name (mysql-db)
+        # 若是從本機執行 python (非 Docker)，則需改為 localhost
+        DB_HOST=mysql-db
+        DB_PORT=3306
+        DB_USER=scraper_user
+        DB_PASSWORD=scraper_password
+        DB_NAME=security_news
 
-     c.啟動 Docker Desktop
+        # --- Google 表單設定 ---
+        # 請將此網址替換為您實際要自動填寫的 Google Form 網址
+        GOOGLE_FORM_URL=https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
 
-     d.打開終端機，重設連線
+        # --- 開發環境設定 ---
+        # 解決 Cursor/VSCode 找不到模組 (reportMissingImports) 的問題
+        # 讓 Python 知道 app 資料夾也是模組來源
+        PYTHONPATH=app
+
+     d.啟動 Docker Desktop
+
+     e.打開終端機，重設連線
        docker context use default
 
-     e.打開終端機，嘗試連線
+     f.打開終端機，嘗試連線
        docker ps
 
-     f.打開終端機，執行會自動建置包含 Chrome 的 Python 環境以及初始化 MySQL 資料庫
+     g.打開終端機，執行會自動建置包含 Chrome 的 Python 環境以及初始化 MySQL 資料庫
        docker-compose up -d --build
 
-     g.打開終端機，查看現在的狀態
+     h.打開終端機，查看現在的狀態
        docker ps
        
        情況 A：看到空蕩蕩的標題，或是什麼都沒有
@@ -238,8 +283,25 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
 ------------------------------------------------------------------------------------------------
 第 2 階段：撰寫程式碼
 
+⚙️ 程式碼核心邏輯說明
+Phase 1: 爬蟲與資料清洗
+多源排程：系統依序執行以下搜尋任務：
+Google News (EN): 針對國際資安新聞。
+Google News (TW): 針對台灣在地報導。
+官方資源: 針對 site:asus.com。
+資安通報: 針對 bleepingcomputer 等權威網站。
+深度閱讀：進入新聞頁面抓取內文。若遇到 404 或 PDF，會自動標記並跳過或使用備用摘要。
+過濾機制：檢查標題與內文是否包含 ASUS 且同時包含 Router 或 Security 相關關鍵字 (支援中英)。
+去重入庫：使用 INSERT IGNORE 與 Unique Key (Title + Date) 防止重複資料寫入 MySQL。
+
+Phase 2: 自動填表
+狀態讀取：從資料庫撈取狀態為 N (New) 的資料。
+時區校正：將資料庫的 UTC 時間轉換為台灣時間 (UTC+8)。
+智慧填寫：使用 JavaScript 直接對 DOM 元素賦值，繞過 Selenium send_keys 可能失敗的限制。
+狀態更新：填寫成功後將狀態更新為 Y，失敗超過 3 次則標記為 E。
+
 1.請將以下內容複製到 app/scraper.py
-  import logging
+    import logging
     import time
     import random
     import re
@@ -255,9 +317,6 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     from webdriver_manager.chrome import ChromeDriverManager
     from logger import logger
 
-    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    # logger = logging.getLogger(__name__)
-
     class NewsScraper:
         def __init__(self):
             self.driver = None
@@ -269,7 +328,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                 try: self.driver.quit()
                 except: pass
             
-            logger.info("啟動 Chrome Driver (Final Stable)...")
+            logger.info("啟動 Chrome Driver (V14 Final)...")
             self.driver = self._setup_driver()
 
         def _setup_driver(self) -> webdriver.Chrome:
@@ -278,7 +337,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
             
-            # [關鍵優化] Eager 模式：HTML 下載完就不等圖片/廣告，大幅減少卡死機率
+            # [關鍵優化] Eager 模式：HTML 下載完就不等圖片/廣告
             chrome_options.page_load_strategy = 'eager'
             
             # 記憶體優化
@@ -321,11 +380,10 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
             has_router = any(kw in text_to_check for kw in router_keywords)
             has_security = any(kw in text_to_check for kw in security_keywords)
             
-            # 寬鬆模式：只要沾上一邊就算相關
             return has_router or has_security
 
         def read_article_content(self, url: str) -> str:
-            if url.lower().endswith('.pdf'): return "PDF 文件連結"
+            if url.lower().endswith('.pdf'): return "SKIP_PDF"
             
             # 最多重試 1 次 (遇到 Driver 死掉時重啟)
             for attempt in range(2):
@@ -337,18 +395,34 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                     try:
                         self.driver.get(url)
                     except TimeoutException:
-                        # Eager 模式下超時通常沒關係，文字應該都到了
                         try: self.driver.execute_script("window.stop();")
                         except: pass
                     
                     time.sleep(random.uniform(1.0, 2.0))
 
-                    # --- [新增] 檢查 404 / Page Not Found ---
+                    # --- [關鍵修正] 錯誤頁面檢測 ---
                     try:
-                        page_source = self.driver.page_source.lower()
-                        if "404" in self.driver.title or "page not found" in page_source or "404 not found" in page_source:
-                            logger.warning(f"偵測到無效頁面 (404/Not Found): {url}")
-                            return "無效連結 (404 Page Not Found)"
+                        page_title = self.driver.title.lower()
+                        # 1. 擴充錯誤關鍵字清單
+                        error_keywords = [
+                            "404", "not found", "page not found", "找不到網頁", "無法顯示網頁", 
+                            "article not found", "error 404", "sorry", "access denied", 
+                            "forbidden", "讀取失敗", "無法載入", "site can't be reached", 
+                            "refused to connect", "bad gateway", "service unavailable"
+                        ]
+                        
+                        # 2. 檢查標題
+                        if any(kw in page_title for kw in error_keywords):
+                            logger.warning(f"偵測到錯誤標題 ({page_title})，立即跳過: {url}")
+                            return "SKIP_ERROR"
+                        
+                        # 3. 檢查頁面內容開頭
+                        body_elem = self.driver.find_element(By.TAG_NAME, "body")
+                        body_start = body_elem.text[:500].lower()
+                        
+                        if any(kw in body_start for kw in error_keywords):
+                            logger.warning(f"偵測到錯誤內容 (如 404/Sorry)，立即跳過: {url}")
+                            return "SKIP_ERROR"
                     except:
                         pass
                     # -------------------------------------
@@ -367,7 +441,6 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
 
                 except Exception as e:
                     error_msg = str(e)
-                    # 智慧偵測死機
                     if "HTTPConnectionPool" in error_msg or "refused" in error_msg or "invalid session" in error_msg:
                         logger.warning(f"偵測到瀏覽器崩潰，正在重啟 Driver...")
                         self._init_driver()
@@ -375,19 +448,15 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                         continue 
                     
                     logger.warning(f"閱讀失敗: {error_msg[:50]}")
-                    return "讀取失敗"
+                    return "SKIP_ERROR" # 發生異常也直接跳過，不要存
             
-            return "讀取失敗"
+            return "SKIP_ERROR"
 
         def scrape_google_search(self, query: str, source_category: str, search_type: str = 'news', lang: str = 'en') -> List[Dict]:
-            """
-            [修正] 這裡加入了 lang 參數，解決 TypeError
-            """
             results = []
             try:
                 if not self.driver: self._init_driver()
 
-                # 根據 lang 決定介面語言 (hl=en 或 hl=zh-TW)
                 base_url = "https://www.google.com/search?q={}&hl={}"
                 
                 if search_type == 'news':
@@ -403,9 +472,8 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                     try: self.driver.execute_script("window.stop();")
                     except: pass
 
-                time.sleep(3) # 等待渲染
+                time.sleep(3)
 
-                # 捲動載入
                 for _ in range(2):
                     try:
                         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -561,36 +629,31 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     from form_filler import FormFiller
     from logger import logger
 
-    # logging.basicConfig(
-    #     level=logging.INFO, 
-    #     format='%(asctime)s - [%(levelname)s] - %(message)s',
-    #     datefmt='%Y-%m-%d %H:%M:%S'
-    # )
-    # logger = logging.getLogger(__name__)
-
     # 多源搜尋設定
-    # 注意：這裡雖然移除了 lang 參數，但透過調整 query 關鍵字
-    # 依然可以搜尋到不同語言的結果 (例如搜尋中文關鍵字就會找到中文新聞)
     SEARCH_CONFIGS = [
         {
             "category": "Google News (EN)",
-            "query": "ASUS router security", # 英文關鍵字 -> 傾向找英文結果
-            "type": "news"
+            "query": "ASUS router security",
+            "type": "news",
+            "lang": "en"
         },
         {
             "category": "Google News (TW)",
-            "query": "華碩 路由器 資安", # 中文關鍵字 -> 傾向找中文結果
-            "type": "news"
+            "query": "華碩 路由器 資安",
+            "type": "news",
+            "lang": "zh-TW"
         },
         {
             "category": "官方資源",
             "query": "site:asus.com security router",
-            "type": "web"
+            "type": "web",
+            "lang": "en"
         },
         {
             "category": "資安通報", 
             "query": "site:bleepingcomputer.com OR site:thehackernews.com ASUS",
-            "type": "news"
+            "type": "news",
+            "lang": "en"
         }
     ]
 
@@ -604,13 +667,11 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
             for config in SEARCH_CONFIGS:
                 logger.info(f"執行任務: {config['category']}...")
                 
-                # [修正重點] 呼叫時移除 lang 參數
-                # 這樣就不會觸發 TypeError，因為舊版 scraper 本來就不收這個參數
                 raw_data = scraper.scrape_google_search(
                     query=config['query'],
                     source_category=config['category'],
-                    search_type=config['type']
-                    # lang=config['lang']  <-- 已移除此行
+                    search_type=config['type'],
+                    lang=config['lang'] 
                 )
                 
                 all_news_data.extend(raw_data[:5])
@@ -629,6 +690,13 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
             for item in all_news_data:
                 deep_content = scraper.read_article_content(item['url'])
                 
+                # --- [關鍵修正] 遇到 404、PDF 或讀取失敗，直接跳過 ---
+                # 這段程式碼保證了無效網頁不會被加入 cleaned_data
+                if deep_content in ["SKIP_404", "SKIP_PDF", "SKIP_ERROR"]:
+                    logger.warning(f"跳過無效/錯誤連結: {item['title'][:20]}...")
+                    continue
+                # -------------------------------------------------
+                
                 final_desc = "無摘要"
                 if deep_content and len(deep_content) > 30 and "失敗" not in deep_content:
                     final_desc = deep_content
@@ -646,9 +714,12 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
                     'captured_at': capture_time 
                 })
 
-            db = Database()
-            new_count = db.insert_news(cleaned_data)
-            logger.info(f"階段一結束。資料庫實際新增: {new_count} 筆。")
+            if cleaned_data:
+                db = Database()
+                new_count = db.insert_news(cleaned_data)
+                logger.info(f"階段一結束。資料庫實際新增: {new_count} 筆。")
+            else:
+                logger.warning("階段一結束。沒有有效資料可寫入。")
             
         except Exception as e:
             logger.error(f"爬蟲階段發生錯誤: {e}")
@@ -1043,4 +1114,4 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
 
 7.在 Docker 裡面測試爬蟲
   docker exec -it asus_news_worker python app/main.py
-  會看到 Log 顯示：  === 全部完成 ===
+  最後會看到 Log 顯示：  === 全部完成 ===

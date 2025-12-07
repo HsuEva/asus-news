@@ -9,36 +9,31 @@ from utils import parse_relative_date
 from form_filler import FormFiller
 from logger import logger
 
-# logging.basicConfig(
-#     level=logging.INFO, 
-#     format='%(asctime)s - [%(levelname)s] - %(message)s',
-#     datefmt='%Y-%m-%d %H:%M:%S'
-# )
-# logger = logging.getLogger(__name__)
-
 # 多源搜尋設定
-# 注意：這裡雖然移除了 lang 參數，但透過調整 query 關鍵字
-# 依然可以搜尋到不同語言的結果 (例如搜尋中文關鍵字就會找到中文新聞)
 SEARCH_CONFIGS = [
     {
         "category": "Google News (EN)",
-        "query": "ASUS router security", # 英文關鍵字 -> 傾向找英文結果
-        "type": "news"
+        "query": "ASUS router security",
+        "type": "news",
+        "lang": "en"
     },
     {
         "category": "Google News (TW)",
-        "query": "華碩 路由器 資安", # 中文關鍵字 -> 傾向找中文結果
-        "type": "news"
+        "query": "華碩 路由器 資安",
+        "type": "news",
+        "lang": "zh-TW"
     },
     {
         "category": "官方資源",
         "query": "site:asus.com security router",
-        "type": "web"
+        "type": "web",
+        "lang": "en"
     },
     {
         "category": "資安通報", 
         "query": "site:bleepingcomputer.com OR site:thehackernews.com ASUS",
-        "type": "news"
+        "type": "news",
+        "lang": "en"
     }
 ]
 
@@ -52,13 +47,11 @@ def process_scraping_job():
         for config in SEARCH_CONFIGS:
             logger.info(f"執行任務: {config['category']}...")
             
-            # [修正重點] 呼叫時移除 lang 參數
-            # 這樣就不會觸發 TypeError，因為舊版 scraper 本來就不收這個參數
             raw_data = scraper.scrape_google_search(
                 query=config['query'],
                 source_category=config['category'],
-                search_type=config['type']
-                # lang=config['lang']  <-- 已移除此行
+                search_type=config['type'],
+                lang=config['lang'] 
             )
             
             all_news_data.extend(raw_data[:5])
@@ -77,6 +70,13 @@ def process_scraping_job():
         for item in all_news_data:
             deep_content = scraper.read_article_content(item['url'])
             
+            # --- [關鍵修正] 遇到 404、PDF 或讀取失敗，直接跳過 ---
+            # 這段程式碼保證了無效網頁不會被加入 cleaned_data
+            if deep_content in ["SKIP_404", "SKIP_PDF", "SKIP_ERROR"]:
+                logger.warning(f"跳過無效/錯誤連結: {item['title'][:20]}...")
+                continue
+            # -------------------------------------------------
+            
             final_desc = "無摘要"
             if deep_content and len(deep_content) > 30 and "失敗" not in deep_content:
                 final_desc = deep_content
@@ -94,9 +94,12 @@ def process_scraping_job():
                 'captured_at': capture_time 
             })
 
-        db = Database()
-        new_count = db.insert_news(cleaned_data)
-        logger.info(f"階段一結束。資料庫實際新增: {new_count} 筆。")
+        if cleaned_data:
+            db = Database()
+            new_count = db.insert_news(cleaned_data)
+            logger.info(f"階段一結束。資料庫實際新增: {new_count} 筆。")
+        else:
+            logger.warning("階段一結束。沒有有效資料可寫入。")
         
     except Exception as e:
         logger.error(f"爬蟲階段發生錯誤: {e}")

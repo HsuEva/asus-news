@@ -28,13 +28,3 @@ CREATE TABLE IF NOT EXISTS news (
     -- 去重機制: 同一天、同標題的新聞視為重複，拒絕寫入
     UNIQUE KEY unique_news_check (title, publish_date)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 3. 建立執行紀錄表 (Optional: 用於紀錄每次 Script 執行狀況)
-CREATE TABLE IF NOT EXISTS execution_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    execution_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    total_processed INT DEFAULT 0,
-    success_count INT DEFAULT 0,
-    error_count INT DEFAULT 0,
-    log_message TEXT
-);

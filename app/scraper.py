@@ -14,9 +14,6 @@ from urllib3.exceptions import MaxRetryError, NewConnectionError
 from webdriver_manager.chrome import ChromeDriverManager
 from logger import logger
 
-# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-# logger = logging.getLogger(__name__)
-
 class NewsScraper:
     def __init__(self):
         self.driver = None
@@ -28,7 +25,7 @@ class NewsScraper:
             try: self.driver.quit()
             except: pass
         
-        logger.info("啟動 Chrome Driver (Final Stable)...")
+        logger.info("啟動 Chrome Driver (V14 Final)...")
         self.driver = self._setup_driver()
 
     def _setup_driver(self) -> webdriver.Chrome:
@@ -37,7 +34,7 @@ class NewsScraper:
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         
-        # [關鍵優化] Eager 模式：HTML 下載完就不等圖片/廣告，大幅減少卡死機率
+        # [關鍵優化] Eager 模式：HTML 下載完就不等圖片/廣告
         chrome_options.page_load_strategy = 'eager'
         
         # 記憶體優化
@@ -80,11 +77,10 @@ class NewsScraper:
         has_router = any(kw in text_to_check for kw in router_keywords)
         has_security = any(kw in text_to_check for kw in security_keywords)
         
-        # 寬鬆模式：只要沾上一邊就算相關
         return has_router or has_security
 
     def read_article_content(self, url: str) -> str:
-        if url.lower().endswith('.pdf'): return "PDF 文件連結"
+        if url.lower().endswith('.pdf'): return "SKIP_PDF"
         
         # 最多重試 1 次 (遇到 Driver 死掉時重啟)
         for attempt in range(2):
@@ -96,18 +92,34 @@ class NewsScraper:
                 try:
                     self.driver.get(url)
                 except TimeoutException:
-                    # Eager 模式下超時通常沒關係，文字應該都到了
                     try: self.driver.execute_script("window.stop();")
                     except: pass
                 
                 time.sleep(random.uniform(1.0, 2.0))
 
-                # --- [新增] 檢查 404 / Page Not Found ---
+                # --- [關鍵修正] 錯誤頁面檢測 ---
                 try:
-                    page_source = self.driver.page_source.lower()
-                    if "404" in self.driver.title or "page not found" in page_source or "404 not found" in page_source:
-                        logger.warning(f"偵測到無效頁面 (404/Not Found): {url}")
-                        return "無效連結 (404 Page Not Found)"
+                    page_title = self.driver.title.lower()
+                    # 1. 擴充錯誤關鍵字清單
+                    error_keywords = [
+                        "404", "not found", "page not found", "找不到網頁", "無法顯示網頁", 
+                        "article not found", "error 404", "sorry", "access denied", 
+                        "forbidden", "讀取失敗", "無法載入", "site can't be reached", 
+                        "refused to connect", "bad gateway", "service unavailable"
+                    ]
+                    
+                    # 2. 檢查標題
+                    if any(kw in page_title for kw in error_keywords):
+                        logger.warning(f"偵測到錯誤標題 ({page_title})，立即跳過: {url}")
+                        return "SKIP_ERROR"
+                    
+                    # 3. 檢查頁面內容開頭
+                    body_elem = self.driver.find_element(By.TAG_NAME, "body")
+                    body_start = body_elem.text[:500].lower()
+                    
+                    if any(kw in body_start for kw in error_keywords):
+                         logger.warning(f"偵測到錯誤內容 (如 404/Sorry)，立即跳過: {url}")
+                         return "SKIP_ERROR"
                 except:
                     pass
                 # -------------------------------------
@@ -126,7 +138,6 @@ class NewsScraper:
 
             except Exception as e:
                 error_msg = str(e)
-                # 智慧偵測死機
                 if "HTTPConnectionPool" in error_msg or "refused" in error_msg or "invalid session" in error_msg:
                     logger.warning(f"偵測到瀏覽器崩潰，正在重啟 Driver...")
                     self._init_driver()
@@ -134,19 +145,15 @@ class NewsScraper:
                     continue 
                 
                 logger.warning(f"閱讀失敗: {error_msg[:50]}")
-                return "讀取失敗"
+                return "SKIP_ERROR" # 發生異常也直接跳過，不要存
         
-        return "讀取失敗"
+        return "SKIP_ERROR"
 
     def scrape_google_search(self, query: str, source_category: str, search_type: str = 'news', lang: str = 'en') -> List[Dict]:
-        """
-        [修正] 這裡加入了 lang 參數，解決 TypeError
-        """
         results = []
         try:
             if not self.driver: self._init_driver()
 
-            # 根據 lang 決定介面語言 (hl=en 或 hl=zh-TW)
             base_url = "https://www.google.com/search?q={}&hl={}"
             
             if search_type == 'news':
@@ -162,9 +169,8 @@ class NewsScraper:
                 try: self.driver.execute_script("window.stop();")
                 except: pass
 
-            time.sleep(3) # 等待渲染
+            time.sleep(3)
 
-            # 捲動載入
             for _ in range(2):
                 try:
                     self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
