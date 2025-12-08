@@ -1,0 +1,277 @@
+2025-12-08 02:34:36 - [INFO] - main.py:41 - === 階段一: 雙語多源爬蟲啟動 ===
+2025-12-08 02:34:36 - [INFO] - scraper.py:28 - 啟動 Chrome Driver (V14 Final)...
+2025-12-08 02:34:46 - [INFO] - main.py:48 - 執行任務: Google News (EN)...
+2025-12-08 02:34:46 - [INFO] - scraper.py:164 - [Google News (EN) | en] 前往搜尋: https://www.google.com/search?q=ASUS router security&hl=en&tbm=nws&tbs=qdr:m6
+2025-12-08 02:34:54 - [INFO] - scraper.py:192 - [Google News (EN)] 找到 10 筆原始資料
+2025-12-08 02:34:55 - [INFO] - scraper.py:232 - [Google News (EN)] 保留 10 筆有效資料
+2025-12-08 02:34:57 - [INFO] - main.py:48 - 執行任務: Google News (TW)...
+2025-12-08 02:34:57 - [INFO] - scraper.py:164 - [Google News (TW) | zh-TW] 前往搜尋: https://www.google.com/search?q=華碩 路由器 資安&hl=zh-TW&tbm=nws&tbs=qdr:m6
+2025-12-08 02:35:04 - [INFO] - scraper.py:192 - [Google News (TW)] 找到 10 筆原始資料
+2025-12-08 02:35:05 - [INFO] - scraper.py:232 - [Google News (TW)] 保留 10 筆有效資料
+2025-12-08 02:35:07 - [INFO] - main.py:48 - 執行任務: 官方資源...
+2025-12-08 02:35:07 - [INFO] - scraper.py:164 - [官方資源 | en] 前往搜尋: https://www.google.com/search?q=site:asus.com security router&hl=en&tbs=qdr:y
+2025-12-08 02:35:24 - [INFO] - scraper.py:192 - [官方資源] 找到 0 筆原始資料
+2025-12-08 02:35:25 - [INFO] - scraper.py:232 - [官方資源] 保留 0 筆有效資料
+2025-12-08 02:35:27 - [INFO] - main.py:48 - 執行任務: 資安通報...
+2025-12-08 02:35:27 - [INFO] - scraper.py:164 - [資安通報 | en] 前往搜尋: https://www.google.com/search?q=site:bleepingcomputer.com OR site:thehackernews.com ASUS&hl=en&tbm=nws&tbs=qdr:m6
+2025-12-08 02:35:34 - [INFO] - scraper.py:192 - [資安通報] 找到 10 筆原始資料
+2025-12-08 02:35:35 - [INFO] - scraper.py:232 - [資安通報] 保留 7 筆有效資料
+2025-12-08 02:35:37 - [INFO] - main.py:64 - 搜尋完成，共 15 筆，開始閱讀內文...
+2025-12-08 02:35:37 - [INFO] - scraper.py:90 - 正在閱讀內文: https://press.asus.com/news/statements/asus-securi...
+2025-12-08 02:35:39 - [INFO] - scraper.py:90 - 正在閱讀內文: https://thehackernews.com/2025/11/wrthug-exploits-...
+2025-12-08 02:35:42 - [INFO] - scraper.py:90 - 正在閱讀內文: https://securityaffairs.com/184636/security/critic...
+2025-12-08 02:35:48 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.techpowerup.com/339333/asus-implements...
+2025-12-08 02:35:51 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.pcgamer.com/hardware/dangerous-securit...
+2025-12-08 02:36:12 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.ithome.com.tw/news/172360...
+2025-12-08 02:36:16 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.informationsecurity.com.tw/article/art...
+2025-12-08 02:36:19 - [INFO] - scraper.py:90 - 正在閱讀內文: https://3c.ltn.com.tw/news/63982...
+2025-12-08 02:36:23 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.ithome.com.tw/news/172369...
+2025-12-08 02:36:27 - [INFO] - scraper.py:90 - 正在閱讀內文: https://blog.billows.com.tw/?p=4019...
+2025-12-08 02:36:32 - [INFO] - scraper.py:90 - 正在閱讀內文: https://thehackernews.com/2025/11/wrthug-exploits-...
+2025-12-08 02:36:35 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.bleepingcomputer.com/news/security/new...
+2025-12-08 02:36:37 - [INFO] - scraper.py:90 - 正在閱讀內文: https://thehackernews.com/2025/10/polaredge-target...
+2025-12-08 02:36:40 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.bleepingcomputer.com/news/security/asu...
+2025-12-08 02:36:41 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.bleepingcomputer.com/news/security/asu...
+2025-12-08 02:36:43 - [INFO] - database.py:60 - [DB] 批次作業結束: 輸入 15 筆 -> 實際新增 13 筆
+2025-12-08 02:36:43 - [INFO] - main.py:97 - 階段一結束。資料庫實際新增: 13 筆。
+2025-12-08 02:36:44 - [INFO] - scraper.py:64 - 爬蟲已結束並關閉
+2025-12-08 02:36:46 - [INFO] - main.py:109 - === 階段二: 填寫表單 (Status='N') ===
+2025-12-08 02:36:46 - [INFO] - main.py:123 - 發現 13 筆任務，啟動填表機器人...
+2025-12-08 02:36:46 - [INFO] - main.py:128 - [1/13] 填寫中: ASUS Armoury Cr...
+2025-12-08 02:37:12 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x5fe05a0d416a <unknown>
+#1 0x5fe059b51c4b <unknown>
+#2 0x5fe059ba3318 <unk
+2025-12-08 02:37:12 - [ERROR] - main.py:143 - -> 失敗 (ID 15): 提交失敗
+2025-12-08 02:37:12 - [WARNING] - database.py:141 - [DB] 新聞 ID 15 失敗次數增加為: 1
+2025-12-08 02:37:15 - [INFO] - main.py:128 - [2/13] 填寫中: ASUS implements...
+2025-12-08 02:37:40 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x55f225aa616a <unknown>
+#1 0x55f225523c4b <unknown>
+#2 0x55f225575318 <unk
+2025-12-08 02:37:40 - [ERROR] - main.py:143 - -> 失敗 (ID 1): 提交失敗
+2025-12-08 02:37:40 - [WARNING] - database.py:141 - [DB] 新聞 ID 1 失敗次數增加為: 1
+2025-12-08 02:37:43 - [INFO] - main.py:128 - [3/13] 填寫中: PolarEdge Targe...
+2025-12-08 02:38:09 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x585f2075916a <unknown>
+#1 0x585f201d6c4b <unknown>
+#2 0x585f20228318 <unk
+2025-12-08 02:38:09 - [ERROR] - main.py:143 - -> 失敗 (ID 13): 提交失敗
+2025-12-08 02:38:09 - [WARNING] - database.py:141 - [DB] 新聞 ID 13 失敗次數增加為: 1
+2025-12-08 02:38:12 - [INFO] - main.py:128 - [4/13] 填寫中: Critical CVE-20...
+2025-12-08 02:38:38 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x55a1c81a416a <unknown>
+#1 0x55a1c7c21c4b <unknown>
+#2 0x55a1c7c73318 <unk
+2025-12-08 02:38:38 - [ERROR] - main.py:143 - -> 失敗 (ID 3): 提交失敗
+2025-12-08 02:38:38 - [WARNING] - database.py:141 - [DB] 新聞 ID 3 失敗次數增加為: 1
+2025-12-08 02:38:41 - [INFO] - main.py:128 - [5/13] 填寫中: ASUS 緊急修補 DSL 路...
+2025-12-08 02:39:08 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x568b1cb6e16a <unknown>
+#1 0x568b1c5ebc4b <unknown>
+#2 0x568b1c63d318 <unk
+2025-12-08 02:39:08 - [ERROR] - main.py:143 - -> 失敗 (ID 7): 提交失敗
+2025-12-08 02:39:08 - [WARNING] - database.py:141 - [DB] 新聞 ID 7 失敗次數增加為: 1
+2025-12-08 02:39:11 - [INFO] - main.py:128 - [6/13] 填寫中: WrtHug Exploits...
+2025-12-08 02:39:37 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x5ad8e8c3a16a <unknown>
+#1 0x5ad8e86b7c4b <unknown>
+#2 0x5ad8e8709318 <unk
+2025-12-08 02:39:37 - [ERROR] - main.py:143 - -> 失敗 (ID 2): 提交失敗
+2025-12-08 02:39:37 - [WARNING] - database.py:141 - [DB] 新聞 ID 2 失敗次數增加為: 1
+2025-12-08 02:39:40 - [INFO] - main.py:128 - [7/13] 填寫中: 華碩路由器已知漏洞遭到利用，中...
+2025-12-08 02:40:06 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x5e00b944716a <unknown>
+#1 0x5e00b8ec4c4b <unknown>
+#2 0x5e00b8f16318 <unk
+2025-12-08 02:40:06 - [ERROR] - main.py:143 - -> 失敗 (ID 6): 提交失敗
+2025-12-08 02:40:06 - [WARNING] - database.py:141 - [DB] 新聞 ID 6 失敗次數增加為: 1
+2025-12-08 02:40:09 - [INFO] - main.py:128 - [8/13] 填寫中: 華碩用戶注意！大量路由器遭駭客...
+2025-12-08 02:40:36 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x5dec88d6316a <unknown>
+#1 0x5dec887e0c4b <unknown>
+#2 0x5dec88832318 <unk
+2025-12-08 02:40:36 - [ERROR] - main.py:143 - -> 失敗 (ID 8): 提交失敗
+2025-12-08 02:40:36 - [WARNING] - database.py:141 - [DB] 新聞 ID 8 失敗次數增加為: 1
+2025-12-08 02:40:39 - [INFO] - main.py:128 - [9/13] 填寫中: 【資安日報】11月20日，華碩...
+2025-12-08 02:41:05 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x5ae10fbc516a <unknown>
+#1 0x5ae10f642c4b <unknown>
+#2 0x5ae10f694318 <unk
+2025-12-08 02:41:05 - [ERROR] - main.py:143 - -> 失敗 (ID 9): 提交失敗
+2025-12-08 02:41:05 - [WARNING] - database.py:141 - [DB] 新聞 ID 9 失敗次數增加為: 1
+2025-12-08 02:41:08 - [INFO] - main.py:128 - [10/13] 填寫中: Operation WrtHu...
+2025-12-08 02:41:34 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x5562bc70616a <unknown>
+#1 0x5562bc183c4b <unknown>
+#2 0x5562bc1d5318 <unk
+2025-12-08 02:41:34 - [ERROR] - main.py:143 - -> 失敗 (ID 10): 提交失敗
+2025-12-08 02:41:34 - [WARNING] - database.py:141 - [DB] 新聞 ID 10 失敗次數增加為: 1
+2025-12-08 02:41:38 - [INFO] - main.py:128 - [11/13] 填寫中: New WrtHug camp...
+2025-12-08 02:42:03 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x5f09e39e116a <unknown>
+#1 0x5f09e345ec4b <unknown>
+#2 0x5f09e34b0318 <unk
+2025-12-08 02:42:03 - [ERROR] - main.py:143 - -> 失敗 (ID 12): 提交失敗
+2025-12-08 02:42:03 - [WARNING] - database.py:141 - [DB] 新聞 ID 12 失敗次數增加為: 1
+2025-12-08 02:42:06 - [INFO] - main.py:128 - [12/13] 填寫中: Got an Asus PC ...
+2025-12-08 02:42:31 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x601e1939116a <unknown>
+#1 0x601e18e0ec4b <unknown>
+#2 0x601e18e60318 <unk
+2025-12-08 02:42:31 - [ERROR] - main.py:143 - -> 失敗 (ID 5): 提交失敗
+2025-12-08 02:42:32 - [WARNING] - database.py:141 - [DB] 新聞 ID 5 失敗次數增加為: 1
+2025-12-08 02:42:35 - [INFO] - main.py:128 - [13/13] 填寫中: ASUS warns of n...
+2025-12-08 02:43:01 - [ERROR] - form_filler.py:107 - 填表失敗: Message: 
+Stacktrace:
+#0 0x59d76abcf16a <unknown>
+#1 0x59d76a64cc4b <unknown>
+#2 0x59d76a69e318 <unk
+2025-12-08 02:43:01 - [ERROR] - main.py:143 - -> 失敗 (ID 14): 提交失敗
+2025-12-08 02:43:01 - [WARNING] - database.py:141 - [DB] 新聞 ID 14 失敗次數增加為: 1
+2025-12-08 02:43:04 - [INFO] - main.py:166 - === 全部完成 ===
+2025-12-08 02:43:04 - [INFO] - main.py:168 - 執行統計: 總共 13 筆 | 成功: 0 筆 | 失敗: 13 筆
+2025-12-08 02:59:38 - [INFO] - main.py:41 - === 階段一: 雙語多源爬蟲啟動 ===
+2025-12-08 02:59:38 - [INFO] - scraper.py:28 - 啟動 Chrome Driver (V14 Final)...
+2025-12-08 02:59:40 - [INFO] - main.py:48 - 執行任務: Google News (EN)...
+2025-12-08 02:59:40 - [INFO] - scraper.py:164 - [Google News (EN) | en] 前往搜尋: https://www.google.com/search?q=ASUS router security&hl=en&tbm=nws&tbs=qdr:m6
+2025-12-08 02:59:48 - [INFO] - scraper.py:192 - [Google News (EN)] 找到 10 筆原始資料
+2025-12-08 02:59:49 - [INFO] - scraper.py:232 - [Google News (EN)] 保留 10 筆有效資料
+2025-12-08 02:59:51 - [INFO] - main.py:48 - 執行任務: Google News (TW)...
+2025-12-08 02:59:51 - [INFO] - scraper.py:164 - [Google News (TW) | zh-TW] 前往搜尋: https://www.google.com/search?q=華碩 路由器 資安&hl=zh-TW&tbm=nws&tbs=qdr:m6
+2025-12-08 02:59:58 - [INFO] - scraper.py:192 - [Google News (TW)] 找到 10 筆原始資料
+2025-12-08 02:59:59 - [INFO] - scraper.py:232 - [Google News (TW)] 保留 10 筆有效資料
+2025-12-08 03:00:01 - [INFO] - main.py:48 - 執行任務: 官方資源...
+2025-12-08 03:00:01 - [INFO] - scraper.py:164 - [官方資源 | en] 前往搜尋: https://www.google.com/search?q=site:asus.com security router&hl=en&tbs=qdr:y
+2025-12-08 03:00:19 - [INFO] - scraper.py:192 - [官方資源] 找到 0 筆原始資料
+2025-12-08 03:00:19 - [INFO] - scraper.py:232 - [官方資源] 保留 0 筆有效資料
+2025-12-08 03:00:21 - [INFO] - main.py:48 - 執行任務: 資安通報...
+2025-12-08 03:00:21 - [INFO] - scraper.py:164 - [資安通報 | en] 前往搜尋: https://www.google.com/search?q=site:bleepingcomputer.com OR site:thehackernews.com ASUS&hl=en&tbm=nws&tbs=qdr:m6
+2025-12-08 03:00:29 - [INFO] - scraper.py:192 - [資安通報] 找到 10 筆原始資料
+2025-12-08 03:00:29 - [INFO] - scraper.py:232 - [資安通報] 保留 7 筆有效資料
+2025-12-08 03:00:31 - [INFO] - main.py:64 - 搜尋完成，共 15 筆，開始閱讀內文...
+2025-12-08 03:00:31 - [INFO] - scraper.py:90 - 正在閱讀內文: https://press.asus.com/news/statements/asus-securi...
+2025-12-08 03:00:34 - [INFO] - scraper.py:90 - 正在閱讀內文: https://thehackernews.com/2025/11/wrthug-exploits-...
+2025-12-08 03:00:37 - [INFO] - scraper.py:90 - 正在閱讀內文: https://securityaffairs.com/184636/security/critic...
+2025-12-08 03:00:43 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.techpowerup.com/339333/asus-implements...
+2025-12-08 03:00:50 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.pcgamer.com/hardware/dangerous-securit...
+2025-12-08 03:00:59 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.ithome.com.tw/news/172360...
+2025-12-08 03:01:02 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.informationsecurity.com.tw/article/art...
+2025-12-08 03:01:06 - [INFO] - scraper.py:90 - 正在閱讀內文: https://3c.ltn.com.tw/news/63982...
+2025-12-08 03:01:10 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.ithome.com.tw/news/172369...
+2025-12-08 03:01:14 - [INFO] - scraper.py:90 - 正在閱讀內文: https://blog.billows.com.tw/?p=4019...
+2025-12-08 03:01:17 - [INFO] - scraper.py:90 - 正在閱讀內文: https://thehackernews.com/2025/11/wrthug-exploits-...
+2025-12-08 03:01:19 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.bleepingcomputer.com/news/security/new...
+2025-12-08 03:01:22 - [INFO] - scraper.py:90 - 正在閱讀內文: https://thehackernews.com/2025/10/polaredge-target...
+2025-12-08 03:01:25 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.bleepingcomputer.com/news/security/asu...
+2025-12-08 03:01:26 - [INFO] - scraper.py:90 - 正在閱讀內文: https://www.bleepingcomputer.com/news/security/asu...
+2025-12-08 03:01:29 - [INFO] - database.py:60 - [DB] 批次作業結束: 輸入 15 筆 -> 實際新增 13 筆
+2025-12-08 03:01:29 - [INFO] - main.py:97 - 階段一結束。資料庫實際新增: 13 筆。
+2025-12-08 03:01:30 - [INFO] - scraper.py:64 - 爬蟲已結束並關閉
+2025-12-08 03:01:32 - [INFO] - main.py:109 - === 階段二: 填寫表單 (Status='N') ===
+2025-12-08 03:01:33 - [INFO] - main.py:123 - 發現 13 筆任務，啟動填表機器人...
+2025-12-08 03:01:33 - [INFO] - main.py:128 - [1/13] 填寫中: ASUS Armoury Cr...
+2025-12-08 03:01:35 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:01:37 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:01:38 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:01:45 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:01:45 - [INFO] - database.py:110 - [DB] 新聞 ID 15 狀態更新為: 'Y'
+2025-12-08 03:01:45 - [INFO] - main.py:137 - -> 成功 (ID 15)
+2025-12-08 03:01:48 - [INFO] - main.py:128 - [2/13] 填寫中: ASUS implements...
+2025-12-08 03:01:50 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:01:51 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:01:53 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:02:00 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:02:00 - [INFO] - database.py:110 - [DB] 新聞 ID 1 狀態更新為: 'Y'
+2025-12-08 03:02:00 - [INFO] - main.py:137 - -> 成功 (ID 1)
+2025-12-08 03:02:03 - [INFO] - main.py:128 - [3/13] 填寫中: PolarEdge Targe...
+2025-12-08 03:02:04 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:02:05 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:02:07 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:02:13 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:02:14 - [INFO] - database.py:110 - [DB] 新聞 ID 13 狀態更新為: 'Y'
+2025-12-08 03:02:14 - [INFO] - main.py:137 - -> 成功 (ID 13)
+2025-12-08 03:02:17 - [INFO] - main.py:128 - [4/13] 填寫中: Critical CVE-20...
+2025-12-08 03:02:18 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:02:19 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:02:20 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:02:27 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:02:27 - [INFO] - database.py:110 - [DB] 新聞 ID 3 狀態更新為: 'Y'
+2025-12-08 03:02:27 - [INFO] - main.py:137 - -> 成功 (ID 3)
+2025-12-08 03:02:30 - [INFO] - main.py:128 - [5/13] 填寫中: ASUS 緊急修補 DSL 路...
+2025-12-08 03:02:31 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:02:32 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:02:35 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:02:42 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:02:42 - [INFO] - database.py:110 - [DB] 新聞 ID 7 狀態更新為: 'Y'
+2025-12-08 03:02:42 - [INFO] - main.py:137 - -> 成功 (ID 7)
+2025-12-08 03:02:45 - [INFO] - main.py:128 - [6/13] 填寫中: WrtHug Exploits...
+2025-12-08 03:02:46 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:02:47 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:02:49 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:02:55 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:02:56 - [INFO] - database.py:110 - [DB] 新聞 ID 2 狀態更新為: 'Y'
+2025-12-08 03:02:56 - [INFO] - main.py:137 - -> 成功 (ID 2)
+2025-12-08 03:02:59 - [INFO] - main.py:128 - [7/13] 填寫中: 華碩路由器已知漏洞遭到利用，中...
+2025-12-08 03:03:00 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:03:01 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:03:04 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:03:10 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:03:11 - [INFO] - database.py:110 - [DB] 新聞 ID 6 狀態更新為: 'Y'
+2025-12-08 03:03:11 - [INFO] - main.py:137 - -> 成功 (ID 6)
+2025-12-08 03:03:14 - [INFO] - main.py:128 - [8/13] 填寫中: 華碩用戶注意！大量路由器遭駭客...
+2025-12-08 03:03:15 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:03:16 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:03:18 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:03:25 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:03:25 - [INFO] - database.py:110 - [DB] 新聞 ID 8 狀態更新為: 'Y'
+2025-12-08 03:03:25 - [INFO] - main.py:137 - -> 成功 (ID 8)
+2025-12-08 03:03:28 - [INFO] - main.py:128 - [9/13] 填寫中: 【資安日報】11月20日，華碩...
+2025-12-08 03:03:29 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:03:30 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:03:32 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:03:39 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:03:39 - [INFO] - database.py:110 - [DB] 新聞 ID 9 狀態更新為: 'Y'
+2025-12-08 03:03:39 - [INFO] - main.py:137 - -> 成功 (ID 9)
+2025-12-08 03:03:42 - [INFO] - main.py:128 - [10/13] 填寫中: Operation WrtHu...
+2025-12-08 03:03:43 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:03:44 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:03:46 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:03:53 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:03:53 - [INFO] - database.py:110 - [DB] 新聞 ID 10 狀態更新為: 'Y'
+2025-12-08 03:03:53 - [INFO] - main.py:137 - -> 成功 (ID 10)
+2025-12-08 03:03:56 - [INFO] - main.py:128 - [11/13] 填寫中: New WrtHug camp...
+2025-12-08 03:03:57 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:03:58 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:04:00 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:04:07 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:04:07 - [INFO] - database.py:110 - [DB] 新聞 ID 12 狀態更新為: 'Y'
+2025-12-08 03:04:07 - [INFO] - main.py:137 - -> 成功 (ID 12)
+2025-12-08 03:04:10 - [INFO] - main.py:128 - [12/13] 填寫中: Got an Asus PC ...
+2025-12-08 03:04:11 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:04:12 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:04:13 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:04:20 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:04:20 - [INFO] - database.py:110 - [DB] 新聞 ID 5 狀態更新為: 'Y'
+2025-12-08 03:04:20 - [INFO] - main.py:137 - -> 成功 (ID 5)
+2025-12-08 03:04:23 - [INFO] - main.py:128 - [13/13] 填寫中: ASUS warns of n...
+2025-12-08 03:04:24 - [INFO] - form_filler.py:58 - 前往表單: https://docs.google.com/forms/d/e/1FAIpQLScUld1s4B_RNVnCqSmK_dzgC7fS0cNrZZxAAIrwmyGZdqS7Yg/viewform?usp=publish-editor
+2025-12-08 03:04:25 - [INFO] - form_filler.py:75 - 偵測到 5 個輸入框
+2025-12-08 03:04:26 - [INFO] - form_filler.py:101 - 欄位填寫完畢，嘗試提交...
+2025-12-08 03:04:33 - [INFO] - form_filler.py:134 - ⚠️ 未偵測到成功文字，但網址已變更，視為提交成功
+2025-12-08 03:04:33 - [INFO] - database.py:110 - [DB] 新聞 ID 14 狀態更新為: 'Y'
+2025-12-08 03:04:33 - [INFO] - main.py:137 - -> 成功 (ID 14)
+2025-12-08 03:04:36 - [INFO] - main.py:166 - === 全部完成 ===
+2025-12-08 03:04:36 - [INFO] - main.py:168 - 執行統計: 總共 13 筆 | 成功: 13 筆 | 失敗: 0 筆

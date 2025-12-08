@@ -70,12 +70,9 @@ def process_scraping_job():
         for item in all_news_data:
             deep_content = scraper.read_article_content(item['url'])
             
-            # --- [關鍵修正] 遇到 404、PDF 或讀取失敗，直接跳過 ---
-            # 這段程式碼保證了無效網頁不會被加入 cleaned_data
             if deep_content in ["SKIP_404", "SKIP_PDF", "SKIP_ERROR"]:
                 logger.warning(f"跳過無效/錯誤連結: {item['title'][:20]}...")
                 continue
-            # -------------------------------------------------
             
             final_desc = "無摘要"
             if deep_content and len(deep_content) > 30 and "失敗" not in deep_content:
@@ -113,16 +110,22 @@ def process_form_filling_job():
     db = Database()
     pending_tasks = db.get_pending_news()
     
+    # 統計變數
+    total_tasks = 0
+    success_count = 0
+    fail_count = 0
+    
     if not pending_tasks:
         logger.info("沒有待處理資料。")
-        return
+        return total_tasks, success_count, fail_count
 
-    logger.info(f"發現 {len(pending_tasks)} 筆任務，啟動填表機器人...")
+    total_tasks = len(pending_tasks)
+    logger.info(f"發現 {total_tasks} 筆任務，啟動填表機器人...")
     
     for i, task in enumerate(pending_tasks):
         news_id = task['id']
         title = task['title']
-        logger.info(f"[{i+1}/{len(pending_tasks)}] 填寫中: {title[:15]}...")
+        logger.info(f"[{i+1}/{total_tasks}] 填寫中: {title[:15]}...")
 
         filler = None
         try:
@@ -132,12 +135,14 @@ def process_form_filling_job():
             if is_success:
                 db.update_status(news_id, 'Y')
                 logger.info(f"-> 成功 (ID {news_id})")
+                success_count += 1
             else:
                 raise Exception("提交失敗")
 
         except Exception as e:
             logger.error(f"-> 失敗 (ID {news_id}): {e}")
             db.record_failure(news_id)
+            fail_count += 1
         finally:
             if filler:
                 try: filler.driver.quit()
@@ -145,6 +150,8 @@ def process_form_filling_job():
             del filler
             gc.collect()
             time.sleep(3)
+            
+    return total_tasks, success_count, fail_count
 
 def main():
     try:
@@ -152,8 +159,14 @@ def main():
         process_scraping_job()
         gc.collect()
         time.sleep(2)
-        process_form_filling_job()
+        
+        # 接收回傳的統計數據
+        total, success, fail = process_form_filling_job()
+        
         logger.info("=== 全部完成 ===")
+        # 顯示統計結果
+        logger.info(f"執行統計: 總共 {total} 筆 | 成功: {success} 筆 | 失敗: {fail} 筆")
+        
     except Exception as e:
         logger.critical(f"主程式崩潰: {e}")
 
