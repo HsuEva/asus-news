@@ -11,6 +11,9 @@ services:
       MYSQL_DATABASE: security_news
       MYSQL_USER: scraper_user
       MYSQL_PASSWORD: scraper_password
+      # --- [新增這行] 強制伺服器端使用 UTF-8 編碼 ---
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # ---------------------------------------------
     ports:
       - "3306:3306"
     volumes:
