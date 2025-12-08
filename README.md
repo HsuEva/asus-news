@@ -1176,8 +1176,11 @@ Phase 2: 自動填表
    (2)看到 mysql> 提示符號後，複製以下指令，切換資料庫
       USE security_news;
 
-   (3)下 SQL 語法，查看新聞資料 (檢查爬蟲成果)
+   (3)下指令，我要用UTF-8看
+      SET NAMES utf8mb4;
+
+   (4)下 SQL 語法，查看新聞資料 (檢查爬蟲成果)
       SELECT id, title, source, created_at FROM news ORDER BY id;
 
-   (4)離開
+   (5)離開
       exit;
