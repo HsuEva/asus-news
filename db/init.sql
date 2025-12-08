@@ -7,10 +7,10 @@ USE security_news;
 -- 2. 建立新聞資料表
 CREATE TABLE IF NOT EXISTS news (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
+    title NVARCHAR(255) NOT NULL,
     publish_date DATE NOT NULL,
-    url VARCHAR(2048) NOT NULL,
-    source VARCHAR(100),
+    url NVARCHAR(2048) NOT NULL,
+    source NVARCHAR(100),
     
     -- 新增: 新聞摘要 (對應爬蟲的 description)
     description TEXT,

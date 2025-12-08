@@ -70,7 +70,7 @@ def process_scraping_job():
         for item in all_news_data:
             deep_content = scraper.read_article_content(item['url'])
             
-            if deep_content in ["SKIP_404", "SKIP_PDF", "SKIP_ERROR"]:
+            if deep_content in ["SKIP_404", "SKIP_PDF", "SKIP_ERROR","drifted off-grid","Page Not Found!","SORRY","Sorry! Page not found"]:
                 logger.warning(f"跳過無效/錯誤連結: {item['title'][:20]}...")
                 continue
             

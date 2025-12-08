@@ -14,6 +14,8 @@ class Database:
             'password': os.getenv('DB_PASSWORD', 'scraper_password'),
             'host': os.getenv('DB_HOST', 'mysql-db'),
             'database': os.getenv('DB_NAME', 'security_news'),
+            'charset': 'utf8mb4',
+            'collation': 'utf8mb4_unicode_ci',
             # ==========================================
             # 關鍵修正：必須設為 False，否則重複資料會導致全部回滾
             # ==========================================
@@ -23,7 +25,20 @@ class Database:
 
     def get_connection(self):
         """建立並回傳資料庫連線"""
-        return mysql.connector.connect(**self.config)
+        conn = mysql.connector.connect(**self.config)
+        
+        # === 新增這段：暴力強制設定編碼 ===
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SET NAMES utf8mb4;")
+            cursor.execute("SET CHARACTER SET utf8mb4;")
+            cursor.execute("SET character_set_connection=utf8mb4;")
+            cursor.close()
+        except:
+            pass
+        # ==============================
+        
+        return conn
 
     def insert_news(self, news_list: List[Dict]) -> int:
         if not news_list:
