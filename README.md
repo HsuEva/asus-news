@@ -132,10 +132,10 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     -- 2. 建立新聞資料表
     CREATE TABLE IF NOT EXISTS news (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
+        title NVARCHAR(255) NOT NULL,
         publish_date DATE NOT NULL,
-        url VARCHAR(2048) NOT NULL,
-        source VARCHAR(100),
+        url NVARCHAR(2048) NOT NULL,
+        source NVARCHAR(100),
         
         -- 新增: 新聞摘要 (對應爬蟲的 description)
         description TEXT,
@@ -157,10 +157,10 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     📊 資料庫 news_Schema
     欄位	        類型	    說明
     id	            INT	        Primary Key
-    title	        VARCHAR	    新聞標題
-    url	            VARCHAR	    原始連結
+    title	        NVARCHAR    新聞標題
+    url	            NVARCHAR	原始連結
     publish_date	DATE	    發布日期 (標準化 YYYY-MM-DD)
-    source	        VARCHAR	    來源分類 (如: Google News (TW))
+    source	        NVARCHAR    來源分類 (如: Google News (TW))
     description	    TEXT	    內文摘要 (優先使用內文，備用 Google Snippet)
     status	        CHAR(1)	    N(新), Y(完), E(錯)
     fail_count	    INT	        失敗重試次數
@@ -690,12 +690,9 @@ Phase 2: 自動填表
             for item in all_news_data:
                 deep_content = scraper.read_article_content(item['url'])
                 
-                # --- [關鍵修正] 遇到 404、PDF 或讀取失敗，直接跳過 ---
-                # 這段程式碼保證了無效網頁不會被加入 cleaned_data
-                if deep_content in ["SKIP_404", "SKIP_PDF", "SKIP_ERROR"]:
+                if deep_content in ["SKIP_404", "SKIP_PDF", "SKIP_ERROR","drifted off-grid","Page Not Found!","SORRY","Sorry! Page not found"]:
                     logger.warning(f"跳過無效/錯誤連結: {item['title'][:20]}...")
                     continue
-                # -------------------------------------------------
                 
                 final_desc = "無摘要"
                 if deep_content and len(deep_content) > 30 and "失敗" not in deep_content:
@@ -733,16 +730,22 @@ Phase 2: 自動填表
         db = Database()
         pending_tasks = db.get_pending_news()
         
+        # 統計變數
+        total_tasks = 0
+        success_count = 0
+        fail_count = 0
+        
         if not pending_tasks:
             logger.info("沒有待處理資料。")
-            return
+            return total_tasks, success_count, fail_count
 
-        logger.info(f"發現 {len(pending_tasks)} 筆任務，啟動填表機器人...")
+        total_tasks = len(pending_tasks)
+        logger.info(f"發現 {total_tasks} 筆任務，啟動填表機器人...")
         
         for i, task in enumerate(pending_tasks):
             news_id = task['id']
             title = task['title']
-            logger.info(f"[{i+1}/{len(pending_tasks)}] 填寫中: {title[:15]}...")
+            logger.info(f"[{i+1}/{total_tasks}] 填寫中: {title[:15]}...")
 
             filler = None
             try:
@@ -752,12 +755,14 @@ Phase 2: 自動填表
                 if is_success:
                     db.update_status(news_id, 'Y')
                     logger.info(f"-> 成功 (ID {news_id})")
+                    success_count += 1
                 else:
                     raise Exception("提交失敗")
 
             except Exception as e:
                 logger.error(f"-> 失敗 (ID {news_id}): {e}")
                 db.record_failure(news_id)
+                fail_count += 1
             finally:
                 if filler:
                     try: filler.driver.quit()
@@ -765,6 +770,8 @@ Phase 2: 自動填表
                 del filler
                 gc.collect()
                 time.sleep(3)
+                
+        return total_tasks, success_count, fail_count
 
     def main():
         try:
@@ -772,8 +779,14 @@ Phase 2: 自動填表
             process_scraping_job()
             gc.collect()
             time.sleep(2)
-            process_form_filling_job()
+            
+            # 接收回傳的統計數據
+            total, success, fail = process_form_filling_job()
+            
             logger.info("=== 全部完成 ===")
+            # 顯示統計結果
+            logger.info(f"執行統計: 總共 {total} 筆 | 成功: {success} 筆 | 失敗: {fail} 筆")
+            
         except Exception as e:
             logger.critical(f"主程式崩潰: {e}")
 
@@ -797,6 +810,8 @@ Phase 2: 自動填表
                 'password': os.getenv('DB_PASSWORD', 'scraper_password'),
                 'host': os.getenv('DB_HOST', 'mysql-db'),
                 'database': os.getenv('DB_NAME', 'security_news'),
+                'charset': 'utf8mb4',
+                'collation': 'utf8mb4_unicode_ci',
                 # ==========================================
                 # 關鍵修正：必須設為 False，否則重複資料會導致全部回滾
                 # ==========================================
@@ -806,7 +821,19 @@ Phase 2: 自動填表
 
         def get_connection(self):
             """建立並回傳資料庫連線"""
-            return mysql.connector.connect(**self.config)
+            conn = mysql.connector.connect(**self.config)
+            
+            try:
+                cursor = conn.cursor()
+                cursor.execute("SET NAMES utf8mb4;")
+                cursor.execute("SET CHARACTER SET utf8mb4;")
+                cursor.execute("SET character_set_connection=utf8mb4;")
+                cursor.close()
+            except:
+                pass
+            # ==============================
+            
+            return conn
 
         def insert_news(self, news_list: List[Dict]) -> int:
             if not news_list:
