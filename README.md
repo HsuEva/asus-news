@@ -1,49 +1,31 @@
-ASUS Router Security News Automation
+ASUS Router Security News Automation  
 
-這是一個端到端的資安新聞自動化蒐集系統。
+這是一個端到端的資安新聞自動化蒐集系統。  
 
-專案目標是從多個來源（Google News、官方公告、資安論壇）爬取 ASUS Router 相關資安威脅，經過清洗與去重後存入 MySQL，最後自動填寫至 Google 表單以進行通報。
-
-
-🌟 專案亮點
-
-本專案包含許多針對 瀏覽器自動化 (Browser Automation) 的進階工程實踐：
-
-全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。
-
-高穩定性設計 (Resilience)：
-
-Eager Loading 策略：大幅縮短頁面載入等待時間，防止爬蟲卡死。
-
-Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。
-
-記憶體管理：實作 gc.collect() 與主動關閉 Driver，使用參數防止 Docker 記憶體崩潰，防止 Docker OOM。
-
-精準過濾 (Precision)：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。
-
-智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動 (Not Interactable) 的問題。
+專案目標是從多個來源（Google News、官方公告、資安論壇）爬取 ASUS Router 相關資安威脅，經過清洗與去重後存入 MySQL，最後自動填寫至 Google 表單以進行通報。  
 
 
-🛠 技術堆疊 (Tech Stack)
+🌟 專案亮點  
 
-**Language**: Python 3.9+
+本專案包含許多針對 瀏覽器自動化 (Browser Automation) 的進階工程實踐：  
+全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。  
+高穩定性設計 (Resilience)：  
+Eager Loading 策略：大幅縮短頁面載入等待時間，防止爬蟲卡死。  
+Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。  
+記憶體管理：實作 gc.collect() 與主動關閉 Driver，使用參數防止 Docker 記憶體崩潰，防止 Docker OOM。  
+精準過濾 (Precision)：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。  
+智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動 (Not Interactable) 的問題。  
 
-**Database**: MySQL 8.0 (Dockerized)
-
-**Core Library**: Selenium WebDriver (Headless Chrome)
-
-**Infrastructure**: Docker & Docker Compose
-
-**Features**:
-
-Multi-source Scraping (Google News EN/TW, Official Sites)
-
-Timezone Correction (UTC+8)
-
-Automatic Log Rotation (日誌輪替，按日儲存)
-
-404 & PDF Detection (無效連結過濾)
-
+🛠 技術堆疊 (Tech Stack)  
+**Language**: Python 3.9+  
+**Database**: MySQL 8.0 (Dockerized)  
+**Core Library**: Selenium WebDriver (Headless Chrome)  
+**Infrastructure**: Docker & Docker Compose  
+**Features**:  
+Multi-source Scraping (Google News EN/TW, Official Sites)  
+Timezone Correction (UTC+8)  
+Automatic Log Rotation (日誌輪替，按日儲存)  
+404 & PDF Detection (無效連結過濾)  
 
 📂 專案結構
 ```text
@@ -106,9 +88,13 @@ asus-news/
 2.請依序輸入以下指令：
   Windows:
   (1). 建立虛擬環境 (只需做一次)
+       ```bash
        python -m venv .venv
+       ```
   (2). 啟動虛擬環境 (每次重開 Cursor 都要確認前面有 (.venv) 字樣，通常 Cursor 會自動偵測)
+       ```bash
        .venv\Scripts\activate
+       ```
 
 註:
 Q:如果遇到.venv\Scripts\activate錯誤為Windows PowerShell 安全性限制問題
