@@ -57,14 +57,16 @@ asus-news/
   執行安裝程式，並依照指示完成安裝。  
 
 3.開啟 Cursor 的終端機，檢查python是否已安裝  
+  ```bash
   python --version 或 py --version 或 python3 --version  
+  ```
 
 4.下載與安裝python  
-  前往 Python 官網下載頁面。  
-  點擊黃色按鈕 Download Python 3.x.x。  
-  ※執行下載的安裝檔 (⚠️ 重要)  
-  務必勾選最下方的 ☑️ Add Python.exe to PATH (將 Python 加入環境變數)。  
-  點選 Install Now 完成安裝。  
+  a.前往 Python 官網下載頁面。  
+  b.點擊黃色按鈕 Download Python 3.9。  
+    ※執行下載的安裝檔 (⚠️ 重要)  
+    務必勾選最下方的 ☑️ Add Python.exe to PATH (將 Python 加入環境變數)。  
+  c.點選 Install Now 完成安裝。  
 
 5.打開 Cursor  
   點擊左側邊欄的「方塊圖示」 (Extensions)。  
@@ -74,13 +76,25 @@ asus-news/
 6.安裝完成後回到步驟1，檢查是否安裝成功，安裝成功後，接續7.開啟專案資料夾。  
 
 7.開啟專案資料夾  
-  在電腦桌面或你習慣的地方，建立一個新資料夾，命名為 asus-news。  
-  在 Cursor 中，點選 File -> Open Folder，選擇這個資料夾。  
+  在電腦桌面或你習慣的地方，建立一個新資料夾，命名為 
+  ```bash
+  asus-news
+  ```
+  。  
+  在 Cursor 中，點選 
+  ```bash
+  File -> Open Folder
+  ```
+  ，選擇這個資料夾。  
 
 ------------------------------------------------------------------------------------------------
 **第 1 階段：建立虛擬環境 (Virtual Environment)** - 為避免影響電腦其他專案，需要建立一個獨立的環境。  
 1.開啟 Cursor 的終端機  
-  使用快捷鍵 Ctrl + ` 開啟終端機。  
+  使用快捷鍵 
+  ```bash
+  Ctrl + ` 
+  ```
+  開啟終端機。  
   確保終端機路徑是在這個專案的資料夾底下。  
 
 2.請依序輸入以下指令：  
