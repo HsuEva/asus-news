@@ -1301,6 +1301,7 @@ Phase 2: 自動填表
     ```bash
     docker exec -it asus_news_worker python app/main.py  
     ```
+    
     最後會看到 Log 顯示：  === 全部完成 ===  
 
   b.自動化執行，程式自動跑起來  
@@ -1309,8 +1310,8 @@ Phase 2: 自動填表
     ```
 
   註:  
-  1.若要開發者進入手動執行，docker-compose.yml中改(command: tail -f /dev/null)後，手動執行docker exec -it asus_news_worker python app/main.py。  
-  2.如果是自動化系統，應該是設定為執行 Python，預期 docker-compose up 後程式就會自動跑起來，因此docker-compose.yml中設定(command: python app/main.py)。  
+  1.若要開發者進入手動執行，```docker-compose.yml ```中改```command: tail -f /dev/null```後，手動執行```docker exec -it asus_news_worker python app/main.py```。  
+  2.如果是自動化系統，應該是設定為執行 Python，預期```docker-compose up ```後程式就會自動跑起來，因此```docker-compose.yml```中設定```command: python app/main.py```。  
 
 8.可以查看 Docker 內部日誌，請在終端機輸入  
   ```bash
