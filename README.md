@@ -1,33 +1,28 @@
 ASUS Router Security News Automation  
-
 這是一個端到端的資安新聞自動化蒐集系統。  
-
 專案目標是從多個來源（Google News、官方公告、資安論壇）爬取 ASUS Router 相關資安威脅，經過清洗與去重後存入 MySQL，最後自動填寫至 Google 表單以進行通報。  
 
-
 🌟 專案亮點  
-
 本專案包含許多針對 瀏覽器自動化 (Browser Automation) 的進階工程實踐：  
-全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。  
-高穩定性設計 (Resilience)：  
-Eager Loading 策略：大幅縮短頁面載入等待時間，防止爬蟲卡死。  
-Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。  
-記憶體管理：實作 gc.collect() 與主動關閉 Driver，使用參數防止 Docker 記憶體崩潰，防止 Docker OOM。  
-精準過濾 (Precision)：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。  
-智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動 (Not Interactable) 的問題。  
+1. 全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。  
+2. 高穩定性設計 (Resilience)：  
+   Eager Loading 策略：大幅縮短頁面載入等待時間，防止爬蟲卡死。  
+   Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。  
+3.記憶體管理：實作 gc.collect() 與主動關閉 Driver，使用參數防止 Docker 記憶體崩潰，防止 Docker OOM。  
+4.精準過濾：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。  
+5.智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動 (Not Interactable) 的問題。  
 
 🛠 技術堆疊 (Tech Stack)  
 **Language**: Python 3.9+  
 **Database**: MySQL 8.0 (Dockerized)  
 **Core Library**: Selenium WebDriver (Headless Chrome)  
 **Infrastructure**: Docker & Docker Compose  
-**Features**:  
-Multi-source Scraping (Google News EN/TW, Official Sites)  
-Timezone Correction (UTC+8)  
-Automatic Log Rotation (日誌輪替，按日儲存)  
-404 & PDF Detection (無效連結過濾)  
+**Features**: Multi-source Scraping (Google News EN/TW, Official Sites)  
+              Timezone Correction (UTC+8)  
+              Automatic Log Rotation (日誌輪替，按日儲存)  
+              404 & PDF Detection (無效連結過濾)  
 
-📂 專案結構
+📂 專案結構  
 ```text
 asus-news/
 ├── app/
@@ -47,69 +42,73 @@ asus-news/
 ```
 
 =========================================================================================
-🚀 環境建置 (Windows 開發環境)
-※如果你是第一次在 Windows 上執行Cursor、Python、Docker，請依照以下步驟設定環境。
-第 0 階段：安裝編輯器 (Cursor、Docker、Python)
-1.下載 Cursor 作為程式碼編輯器
-  前往 Cursor 官網，下載安裝檔。
-  執行安裝程式，並依照指示完成安裝。
+🚀 環境建置 (Windows 開發環境)  
+※如果你是第一次在 Windows 上執行Cursor、Python、Docker，請依照以下步驟設定環境。  
+第 0 階段：安裝編輯器 (Cursor、Docker、Python)  
+1.下載 Cursor 作為程式碼編輯器  
+  前往 Cursor 官網，下載安裝檔。  
+  執行安裝程式，並依照指示完成安裝。  
 
-2.下載Docker
-  前往 Docker 官網，下載安裝檔。
-  執行安裝程式，並依照指示完成安裝。
+2.下載Docker  
+  前往 Docker 官網，下載安裝檔。  
+  執行安裝程式，並依照指示完成安裝。  
 
-3. 開啟 Cursor 的終端機，檢查python是否已安裝
-    python --version 或 py --version 或 python3 --version
+3. 開啟 Cursor 的終端機，檢查python是否已安裝  
+    python --version 或 py --version 或 python3 --version  
 
-4.下載與安裝python
-  前往 Python 官網下載頁面。
-  點擊黃色按鈕 Download Python 3.x.x。
-  ※執行下載的安裝檔 (⚠️ 重要)
-  務必勾選最下方的 ☑️ Add Python.exe to PATH (將 Python 加入環境變數)。
-  點選 Install Now 完成安裝。
+4.下載與安裝python  
+  前往 Python 官網下載頁面。  
+  點擊黃色按鈕 Download Python 3.x.x。  
+  ※執行下載的安裝檔 (⚠️ 重要)  
+  務必勾選最下方的 ☑️ Add Python.exe to PATH (將 Python 加入環境變數)。  
+  點選 Install Now 完成安裝。  
 
-5.打開 Cursor
-  點擊左側邊欄的「方塊圖示」 (Extensions)。
-  搜尋 Python。
-  找到由 Microsoft 開發的那個（通常下載量最高），點擊 Install。 (這個套件會幫你做語法高亮、程式碼補全、還能幫你選虛擬環境)
+5.打開 Cursor  
+  點擊左側邊欄的「方塊圖示」 (Extensions)。  
+  搜尋 Python。  
+  找到由 Microsoft 開發的那個（通常下載量最高），點擊 Install。 (這個套件會幫你做語法高亮、程式碼補全、還能幫你選虛擬環境)  
 
-6.安裝完成後回到步驟1，檢查是否安裝成功，安裝成功後，接續7.開啟專案資料夾。
+6.安裝完成後回到步驟1，檢查是否安裝成功，安裝成功後，接續7.開啟專案資料夾。  
 
-7.開啟專案資料夾
-  在電腦桌面或你習慣的地方，建立一個新資料夾，命名為 asus-news。
-  在 Cursor 中，點選 File -> Open Folder，選擇這個資料夾。
+7.開啟專案資料夾  
+  在電腦桌面或你習慣的地方，建立一個新資料夾，命名為 asus-news。  
+  在 Cursor 中，點選 File -> Open Folder，選擇這個資料夾。  
 
 ------------------------------------------------------------------------------------------------
-第 2 階段：建立虛擬環境 (Virtual Environment) - 為避免影響電腦其他專案，需要建立一個獨立的環境。
-1.開啟 Cursor 的終端機
-  使用快捷鍵 Ctrl + ` 開啟終端機。
-  確保終端機路徑是在這個專案的資料夾底下。
+第 2 階段：建立虛擬環境 (Virtual Environment) - 為避免影響電腦其他專案，需要建立一個獨立的環境。  
+1.開啟 Cursor 的終端機  
+  使用快捷鍵 Ctrl + ` 開啟終端機。  
+  確保終端機路徑是在這個專案的資料夾底下。  
 
-2.請依序輸入以下指令：
+2.請依序輸入以下指令：  
   Windows:
-  (1). 建立虛擬環境 (只需做一次)
+  (1). 建立虛擬環境 (只需做一次)  
        ```bash
-       python -m venv .venv
+       python -m venv .venv  
        ```
-  (2). 啟動虛擬環境 (每次重開 Cursor 都要確認前面有 (.venv) 字樣，通常 Cursor 會自動偵測)
+  (2). 啟動虛擬環境 (每次重開 Cursor 都要確認前面有 (.venv) 字樣，通常 Cursor 會自動偵測)  
        ```bash
-       .venv\Scripts\activate
+       .venv\Scripts\activate  
        ```
 
 註:
-Q:如果遇到.venv\Scripts\activate錯誤為Windows PowerShell 安全性限制問題
-A:解決方法
-  步驟 1：修改執行權限
-  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-  步驟 2：權限改好後，再執行一次原本的指令
-💡如何確認成功？
-   看到 Terminal 的最前面出現了綠色或白色的 (.venv) 字樣
+Q:如果遇到.venv\Scripts\activate錯誤為Windows PowerShell 安全性限制問題  
+A:解決方法  
+  步驟 1：修改執行權限  
+  ```bash
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser  
+  ```
+  步驟 2：權限改好後，再執行一次原本的指令  
+💡如何確認成功？  
+   看到 Terminal 的最前面出現了綠色或白色的 (.venv) 字樣  
 
 ------------------------------------------------------------------------------------------------
-第 3 階段：驗證與安裝依賴
-1.在 Cursor 左側檔案總管按右鍵 -> New File -> 命名為 requirements.txt。
-
-2.貼上以下內容:
+第 3 階段：驗證與安裝依賴  
+```bash
+1.在 Cursor 左側檔案總管按右鍵 -> New File -> 命名為 requirements.txt。  
+```
+2.貼上以下內容:  
+  ```text
   requests>=2.31.0
   beautifulsoup4>=4.12.0
   selenium>=4.16.0
@@ -117,22 +116,25 @@ A:解決方法
   mysql-connector-python>=8.2.0
   python-dotenv>=1.0.0
   pandas>=2.1.0
+  ```
 
-3.回到終端機，輸入安裝指令：
+3.回到終端機，輸入安裝指令：  
+  ```bash
   pip install -r requirements.txt
+```
 
 ------------------------------------------------------------------------------------------------
-第 4 階段：Docker 化
-在 Docker 環境中，我們會定義兩個主要的 Service：
-db: MySQL 8.0 資料庫。
-app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點先讓 DB 跑起來)。
+第 4 階段：Docker 化  
+在 Docker 環境中，我們會定義兩個主要的 Service：  
+db: MySQL 8.0 資料庫。  
+app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點先讓 DB 跑起來)。  
 
-1.建立資料庫初始化腳本 (init.sql)
-  (1)在專案根目錄建立一個資料夾，命名為 db。
+1.建立資料庫初始化腳本 (init.sql)  
+  (1)在專案根目錄建立一個資料夾，命名為 db。  
 
-  (2)在 db 資料夾內建立一個檔案 init.sql。
+  (2)在 db 資料夾內建立一個檔案 init.sql。  
 
-  (3)貼上以下 SQL 碼(2個TABLE)：
+  (3)貼上以下 SQL 碼(2個TABLE)：    
     -- db/init.sql
 
     -- 1. 建立並使用資料庫
@@ -176,7 +178,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     fail_count	    INT	        失敗重試次數
     created_at	    TIMESTAMP	擷取時間 (UTC，填表時會自動轉 +8)
 
-  (4)建立 docker-compose.yml
+  (4)建立 docker-compose.yml  
     version: '3.8'
     services:
     # 1. MySQL 資料庫服務
@@ -233,9 +235,9 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     scraper_network:
         driver: bridge
 
-  (5)建立 Dockerfile (docker-compose.yml 裡面參照了 build: .，需要一個 Dockerfile 才能跑)
-     a.在專案根目錄建立 Dockerfile。
-     b.在Dockerfile貼上以下內容：
+  (5)建立 Dockerfile (docker-compose.yml 裡面參照了 build: .，需要一個 Dockerfile 才能跑)  
+     a.在專案根目錄建立 Dockerfile。  
+     b.在Dockerfile貼上以下內容：  
         # 使用 Python 3.9 Slim
         FROM python:3.9-slim
 
@@ -283,7 +285,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
         # 5. 預設指令
         CMD ["tail", "-f", "/dev/null"]
      
-     c.在.env貼上以下內容，做環境設定
+     c.在.env貼上以下內容，做環境設定  
         # --- 資料庫連線設定 (必須與 docker-compose.yml 一致) ---
         # 注意: 在 Docker 內部互連時，HOST 必須是 docker-compose 裡的 service name (mysql-db)
         # 若是從本機執行 python (非 Docker)，則需改為 localhost
@@ -302,41 +304,49 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
         # 讓 Python 知道 app 資料夾也是模組來源
         PYTHONPATH=app
 
-     d.啟動 Docker Desktop
+     d.啟動 Docker Desktop  
 
-     e.打開終端機，重設連線
+     e.打開終端機，重設連線  
+       ```bash
        docker context use default
+       ```
 
-     f.打開終端機，嘗試連線
+     f.打開終端機，嘗試連線  
+       ```bash
        docker ps
+       ```
 
-     g.打開終端機，執行會自動建置包含 Chrome 的 Python 環境以及初始化 MySQL 資料庫
+     g.打開終端機，執行會自動建置包含 Chrome 的 Python 環境以及初始化 MySQL 資料庫  
+       ```bash
        docker-compose up -d --build
+       ```
 
-     h.打開終端機，查看現在的狀態
+     h.打開終端機，查看現在的狀態  
+       ```bash
        docker ps
-       
-       情況 A：看到空蕩蕩的標題，或是什麼都沒有
+       ```
+       ```text
+       情況 A：看到空蕩蕩的標題，或是什麼都沒有  
        CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS   PORTS   NAMES
        
-       情況 B：看到兩行資料 (mysql 和 python)，例如:
+       情況 B：看到兩行資料 (mysql 和 python)，例如:  
        CONTAINER ID   IMAGE              ...   STATUS          NAMES
        abc12345       mysql:8.0          ...   Up 5 seconds    asus_news_db
        def67890       asus-news-app      ...   Up 5 seconds    asus_news_worker
 
-       ※如果有情況A，可能是Dockerfile中的依賴或驗證版本問題，將Dockerfile重新確認後，再重新做
-         強制重新下載所有的 Chrome 和依賴套件，確保你的新 Dockerfile 邏輯被真正執行。
+       ※如果有情況A，可能是Dockerfile中的依賴或驗證版本問題，將Dockerfile重新確認後，再重新做  
+         強制重新下載所有的 Chrome 和依賴套件，確保你的新 Dockerfile 邏輯被真正執行。  
          docker-compose build --no-cache
-         建置成功後（沒有報錯），再啟動它
+         建置成功後（沒有報錯），再啟動它  
          docker-compose up -d --force-recreate
-
+       ```
 =========================================================================================
-🚀 撰寫爬蟲程式建置 (Windows 開發環境)
+🚀 撰寫爬蟲程式建置 (Windows 開發環境)  
 
-第 1 階段：建立專案結構
-1.在根目錄下建立app 資料夾
+第 1 階段：建立專案結構  
+1.在根目錄下建立app 資料夾  
 
-2.在app資料夾下，建立以下檔案
+2.在app資料夾下，建立以下檔案  
   ```text
     asus-news/
     ├── app/                    # 核心應用程式邏輯
@@ -349,26 +359,28 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     │── └── logger.py           # 日誌設定 (Logging)
   ```
 ------------------------------------------------------------------------------------------------
-第 2 階段：撰寫程式碼
+第 2 階段：撰寫程式碼  
 
-⚙️ 程式碼核心邏輯說明
-Phase 1: 爬蟲與資料清洗
-多源排程：系統依序執行以下搜尋任務：
-Google News (EN): 針對國際資安新聞。
-Google News (TW): 針對台灣在地報導。
-官方資源: 針對 site:asus.com。
-資安通報: 針對 bleepingcomputer 等權威網站。
-深度閱讀：進入新聞頁面抓取內文。若遇到 404 或 PDF，會自動標記並跳過或使用備用摘要。
-過濾機制：檢查標題與內文是否包含 ASUS 且同時包含 Router 或 Security 相關關鍵字 (支援中英)。
-去重入庫：使用 INSERT IGNORE 與 Unique Key (Title + Date) 防止重複資料寫入 MySQL。
+⚙️ 程式碼核心邏輯說明  
+```text
+Phase 1: 爬蟲與資料清洗  
+多源排程：系統依序執行以下搜尋任務：  
+Google News (EN): 針對國際資安新聞。  
+Google News (TW): 針對台灣在地報導。  
+官方資源: 針對 site:asus.com。  
+資安通報: 針對 bleepingcomputer 等權威網站。  
+深度閱讀：進入新聞頁面抓取內文。若遇到 404 或 PDF，會自動標記並跳過或使用備用摘要。  
+過濾機制：檢查標題與內文是否包含 ASUS 且同時包含 Router 或 Security 相關關鍵字 (支援中英)。  
+去重入庫：使用 INSERT IGNORE 與 Unique Key (Title + Date) 防止重複資料寫入 MySQL。  
 
-Phase 2: 自動填表
-狀態讀取：從資料庫撈取狀態為 N (New) 的資料。
-時區校正：將資料庫的 UTC 時間轉換為台灣時間 (UTC+8)。
-智慧填寫：使用 JavaScript 直接對 DOM 元素賦值，繞過 Selenium send_keys 可能失敗的限制。
-狀態更新：填寫成功後將狀態更新為 Y，失敗超過 3 次則標記為 E。
+Phase 2: 自動填表  
+狀態讀取：從資料庫撈取狀態為 N (New) 的資料。  
+時區校正：將資料庫的 UTC 時間轉換為台灣時間 (UTC+8)。  
+智慧填寫：使用 JavaScript 直接對 DOM 元素賦值，繞過 Selenium send_keys 可能失敗的限制。  
+狀態更新：填寫成功後將狀態更新為 Y，失敗超過 3 次則標記為 E。  
+```
 
-1.請將以下內容複製到 app/scraper.py
+1.請將以下內容複製到 app/scraper.py  
     import logging
     import time
     import random
@@ -608,7 +620,7 @@ Phase 2: 自動填表
             
             return results
 
-2.請將以下內容複製到 app/utils.py，建立日期處理工具
+2.請將以下內容複製到 app/utils.py，建立日期處理工具  
     import re
     from datetime import datetime, timedelta
 
@@ -685,7 +697,7 @@ Phase 2: 自動填表
             print(f"日期解析失敗: {date_str}, 錯誤: {e}")
             return today.strftime("%Y-%m-%d")
 
-3.請將以下內容複製到 app/main.py，更新主程式
+3.請將以下內容複製到 app/main.py，更新主程式  
     import logging
     import time
     import os
@@ -869,7 +881,7 @@ Phase 2: 自動填表
     if __name__ == "__main__":
         main()
 
-4.請將以下內容複製到 app/database.py，更新資料庫模組
+4.請將以下內容複製到 app/database.py，更新資料庫模組  
     import mysql.connector
     import os
     import logging
@@ -1040,7 +1052,7 @@ Phase 2: 自動填表
                 if cursor: cursor.close()
                 if conn and conn.is_connected(): conn.close()
 
-5.請將以下內容複製到 app/form_filler.py，更新Google Form 填表器
+5.請將以下內容複製到 app/form_filler.py，更新Google Form 填表器  
     import logging
     import os
     import time
@@ -1197,7 +1209,7 @@ Phase 2: 自動填表
                 except:
                     pass
 
-6.請將以下內容複製到 app/logger.py，更新日誌設定模組
+6.請將以下內容複製到 app/logger.py，更新日誌設定模組  
     import logging
     import os
     import sys
@@ -1262,39 +1274,55 @@ Phase 2: 自動填表
     # 其他檔案只需: from logger import logger 即可使用
     logger = LoggerSetup().get_logger()
 
-7.執行
-  a.在 Docker 裡面手動測試爬蟲
+7.執行  
+  a.在 Docker 裡面手動測試爬蟲  
+    ```bash
     docker exec -it asus_news_worker python app/main.py
-    最後會看到 Log 顯示：  === 全部完成 ===
+    ```
+    最後會看到 Log 顯示：  === 全部完成 ===  
 
-  b.自動化執行，程式自動跑起來
+  b.自動化執行，程式自動跑起來  
+    ```bash
     docker-compose up
+    ```
 
   註:
-  1.若要開發者進入手動執行，docker-compose.yml中改(command: tail -f /dev/null)後，手動執行docker exec -it asus_news_worker python app/main.py。
-  2.如果是自動化系統，應該是設定為執行 Python，預期 docker-compose up 後程式就會自動跑起來，因此docker-compose.yml中設定(command: python app/main.py)。
+  1.若要開發者進入手動執行，docker-compose.yml中改(command: tail -f /dev/null)後，手動執行docker exec -it asus_news_worker python app/main.py。  
+  2.如果是自動化系統，應該是設定為執行 Python，預期 docker-compose up 後程式就會自動跑起來，因此docker-compose.yml中設定(command: python app/main.py)。  
 
-8.可以查看 Docker 內部日誌，請在終端機輸入
+8.可以查看 Docker 內部日誌，請在終端機輸入  
+  ```bash
   docker logs -f asus_news_worker
+  ```
 
 =========================================================================================
-🚀 查詢結果
-有不同方法可查詢結果
-1. 至Google Form表單回應中查看
+🚀 查詢結果  
+有不同方法可查詢結果  
+1. 至Google Form表單回應中查看  
 
-2. 進入 MySQL 互動介面查詢
-   (1).請在 Terminal 執行，進入容器並登入 MySQL
+2. 進入 MySQL 互動介面查詢  
+   (1).請在 Terminal 執行，進入容器並登入 MySQL  
+       ```bash
        docker exec -it asus_news_db mysql -u root -p
+       ```
        系統會提示輸入密碼，請輸入 密碼
 
-   (2)看到 mysql> 提示符號後，複製以下指令，切換資料庫
+   (2)看到 mysql> 提示符號後，複製以下指令，切換資料庫  
+      ```bash
       USE security_news;
+      ```
 
-   (3)下指令，我要用UTF-8看
+   (3)下指令，我要用UTF-8看  
+      ```bash
       SET NAMES utf8mb4;
+      ```
 
-   (4)下 SQL 語法，查看新聞資料 (檢查爬蟲成果)
+   (4)下 SQL 語法，查看新聞資料 (檢查爬蟲成果)  
+      ```bash
       SELECT id, title, source, created_at FROM news ORDER BY id;
+      ```
 
-   (5)離開
+   (5)離開  
+      ```bash
       exit;
+      ```
