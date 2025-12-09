@@ -831,21 +831,29 @@ Phase 2: 自動填表
         return total_tasks, success_count, fail_count
 
     def main():
-        try:
-            time.sleep(2)
-            process_scraping_job()
-            gc.collect()
-            time.sleep(2)
-            
-            # 接收回傳的統計數據
-            total, success, fail = process_form_filling_job()
-            
-            logger.info("=== 全部完成 ===")
-            # 顯示統計結果
-            logger.info(f"執行統計: 總共 {total} 筆 | 成功: {success} 筆 | 失敗: {fail} 筆")
-            
-        except Exception as e:
-            logger.critical(f"主程式崩潰: {e}")
+        logger.info("=== 系統啟動：進入自動化排程模式 ===")
+        # 加入 while True 讓它變成無窮迴圈
+        while True:
+            try:
+                time.sleep(2)
+                process_scraping_job()
+                gc.collect()
+                time.sleep(2)
+                
+                # 接收回傳的統計數據
+                total, success, fail = process_form_filling_job()
+                
+                logger.info("=== 全部完成 ===")
+                # 顯示統計結果
+                logger.info(f"執行統計: 總共 {total} 筆 | 成功: {success} 筆 | 失敗: {fail} 筆")
+                
+            except Exception as e:
+                logger.critical(f"主程式崩潰: {e}")
+                
+            # 設定下次執行的等待時間 (目前設定為 24 小時 = 86400 秒)
+            wait_seconds = 86400 
+            logger.info(f"進入待機模式，{wait_seconds/3600} 小時後將再次執行...")
+            time.sleep(wait_seconds)
 
     if __name__ == "__main__":
         main()
@@ -1253,8 +1261,10 @@ Phase 2: 自動填表
 
   註:
   1.若要開發者進入手動執行，docker-compose.yml中改(command: tail -f /dev/null)後，手動執行docker exec -it asus_news_worker python app/main.py。
-  2.要執行「自動化系統」，預期 docker-compose up 後程式就會自動跑起來，因此docker-compose.yml中設定(command: tail -f /dev/null)。
+  2.如果是自動化系統，應該是設定為執行 Python，預期 docker-compose up 後程式就會自動跑起來，因此docker-compose.yml中設定(command: python app/main.py)。
 
+8.可以查看 Docker 內部日誌，請在終端機輸入
+  docker logs -f asus_news_worker
 
 ================================================================================================
 🚀 查詢結果
