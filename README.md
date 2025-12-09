@@ -2,7 +2,7 @@ ASUS Router Security News Automation
 這是一個端到端的資安新聞自動化蒐集系統。  
 專案目標是從多個來源（Google News、官方公告、資安論壇）爬取 ASUS Router 相關資安威脅，經過清洗與去重後存入 MySQL，最後自動填寫至 Google 表單以進行通報。  
 
-🌟 專案亮點  
+## 🌟 專案亮點  
 ```text
 本專案包含許多針對 瀏覽器自動化 (Browser Automation) 的進階工程實踐：  
 1. 全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。  
@@ -14,7 +14,7 @@ ASUS Router Security News Automation
 5.智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動的問題。  
 ```
 
-🛠 技術堆疊 (Tech Stack)  
+## 🛠 技術堆疊 (Tech Stack)  
 ```text
 **Language**: Python 3.9+  
 **Database**: MySQL 8.0 (Dockerized)  
@@ -26,7 +26,33 @@ ASUS Router Security News Automation
               404 & PDF Detection (無效連結過濾)  
 ```
 
-📂 專案結構  
+## 🎯 爬取站點與關鍵字策略
+
+本系統採用「廣泛搜尋、精確過濾」的策略，確保抓取的資安新聞既全面又精準。
+
+### 1. 目標站點與搜尋語法 (Source Targets)
+系統針對不同屬性的來源設定了專屬的搜尋語法 (Google Dork)，定義於 `app/main.py`：
+
+| 來源分類 | 搜尋語法 (Query) | 說明 |
+| :--- | :--- | :--- |
+| **Google News (EN)** | `ASUS router security` | 鎖定全球英文資安新聞報導。 |
+| **Google News (TW)** | `華碩 路由器 資安` | 鎖定台灣繁體中文在地報導。 |
+| **官方資源** | `site:asus.com security router` | 針對 ASUS 官方網站進行站內搜尋，抓取官方公告。 |
+| **資安通報** | `site:bleepingcomputer.com OR site:thehackernews.com ASUS` | 針對權威資安網站 (BleepingComputer, The Hacker News) 進行定向監控。 |
+
+### 2. 關鍵字過濾邏輯 (Keyword Filtering)
+為了避免抓到與資安無關的產品行銷新聞，`scraper.py` 實作了雙重關鍵字過濾機制 `is_relevant()`。只有當標題或內文同時滿足以下條件時才會被保留：
+
+1.  **必要條件**：必須包含品牌名稱 (`asus` 或 `華碩`)。
+2.  **主題交集**：必須包含以下任一組關鍵字 (支援中英混雜)：
+
+* **路由器型號/產品詞 (Router Keywords)**：
+    > router, rt-, gt-, zenwifi, aimesh, tuf gaming, rog rapture, 路由器, 分享器, 網通, wifi...
+
+* **資安威脅詞 (Security Keywords)**：
+    > security, vulnerability, cve, exploit, hack, patch, firmware, backdoor, botnet, malware, cyber, attack, 資安, 漏洞, 駭客, 攻擊, 更新, 修補, 韌體, 後門, 惡意...
+
+## 📂 專案結構  
 ```text
 asus-news/
 ├── app/
@@ -60,7 +86,7 @@ asus-news/
     * **成功**：更新 DB 狀態為 `'Y'` (Yes)。
     * **失敗**：記錄失敗次數 (`fail_count + 1`)。若失敗次數達 3 次，標記為 `'E'` (Error) 並放棄，避免卡死佇列。
 
-### 2. 可調整參數 (Configuration)
+### 2. 可調整參數
 目前的參數設定位於程式碼中，您可以根據需求修改以下檔案：
 
 * **排程執行間隔** (`app/main.py`)：
@@ -105,10 +131,10 @@ asus-news/
     * 雖然已啟用 `headless` 與 `disable-dev-shm-usage`，但 Chrome Driver 仍可能隨時間累積記憶體佔用。系統會在每次任務結束後主動關閉 Driver 並呼叫 `gc.collect()` 進行回收。
 
 **=========================================================================================**
-🚀 **環境建置 (Windows 開發環境)**  
+## 🚀 **環境建置 (Windows 開發環境)**  
 ※如果你是第一次在 Windows 上執行Cursor、Python、Docker，請依照以下步驟設定環境。  
 
-**第 0 階段：安裝編輯器 (Cursor、Docker、Python)**  
+### **第 0 階段：安裝編輯器 (Cursor、Docker、Python)**  
 1.下載 Cursor 作為程式碼編輯器  
   前往 Cursor 官網，下載安裝檔。  
   執行安裝程式，並依照指示完成安裝。  
@@ -143,7 +169,7 @@ asus-news/
   在 Cursor 中，點選 ```File -> Open Folder ```，選擇這個資料夾。  
 
 ------------------------------------------------------------------------------------------------
-**第 1 階段：建立虛擬環境 (Virtual Environment)** - 為避免影響電腦其他專案，需要建立一個獨立的環境。  
+### **第 1 階段：建立虛擬環境 (Virtual Environment)** - 為避免影響電腦其他專案，需要建立一個獨立的環境。  
 1.開啟 Cursor 的終端機  
   使用快捷鍵 ```Ctrl + ` ``` 開啟終端機。  
   確保終端機路徑是在這個專案的資料夾底下。  
@@ -171,7 +197,7 @@ A:解決方法
 💡如何確認成功？ 看到 Terminal 的最前面出現了綠色或白色的 (.venv) 字樣  
 
 ------------------------------------------------------------------------------------------------
-**第 2 階段：驗證與安裝依賴**  
+### **第 2 階段：驗證與安裝依賴**  
 ```bash
 1.在 Cursor 左側檔案總管按右鍵 -> New File -> 命名為 requirements.txt。  
 ```
@@ -192,7 +218,7 @@ A:解決方法
 ```
 
 ------------------------------------------------------------------------------------------------
-**第 3 階段：Docker 化**  
+### **第 3 階段：Docker 化**  
 在 Docker 環境中，我們會定義兩個主要的 Service：  
 db: MySQL 8.0 資料庫。  
 app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點先讓 DB 跑起來)。  
@@ -411,9 +437,9 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
          docker-compose up -d --force-recreate
        ```
 **=========================================================================================**
-🚀 **撰寫爬蟲程式建置 (Windows 開發環境)**  
+## 🚀 **撰寫爬蟲程式建置 (Windows 開發環境)**  
 
-**第 1 階段：建立專案結構**  
+### **第 1 階段：建立專案結構**  
 1.在根目錄下建立app 資料夾  
 
 2.在app資料夾下，建立以下檔案  
@@ -429,7 +455,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     │── └── logger.py           # 日誌設定 (Logging)
   ```
 ------------------------------------------------------------------------------------------------
-**第 2 階段：撰寫程式碼**  
+### **第 2 階段：撰寫程式碼**  
 
 ⚙️ 程式碼核心邏輯說明  
 ```text
@@ -1378,7 +1404,7 @@ Phase 2: 自動填表
   ```
 
 **=========================================================================================**
-🚀 **查詢結果**  
+## 🚀 **查詢結果**  
 有不同方法可查詢結果  
 1. 至Google Form表單回應中查看  
 
