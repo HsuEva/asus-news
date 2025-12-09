@@ -45,7 +45,8 @@ services:
     networks:
       - scraper_network
     # 保持容器開啟，方便開發
-    command: tail -f /dev/null
+    # 原本是: command: tail -f /dev/null
+    command: python app/main.py
 
 volumes:
   db_data:

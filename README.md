@@ -4,11 +4,11 @@ ASUS Router Security News Automation
 
 🌟 專案亮點
 本專案包含許多針對 瀏覽器自動化 (Browser Automation) 的進階工程實踐：
-全 Selenium 架構：捨棄易被阻擋的 Requests，搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。
+全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。
 高穩定性設計 (Resilience)：
 Eager Loading 策略：大幅縮短頁面載入等待時間，防止爬蟲卡死。
 Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。
-記憶體管理：實作 gc.collect() 與主動關閉 Driver，配合 shm_size 優化，防止 Docker OOM。
+記憶體管理：實作 gc.collect() 與主動關閉 Driver，使用參數防止 Docker 記憶體崩潰，防止 Docker OOM。
 精準過濾 (Precision)：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。
 智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動 (Not Interactable) 的問題。
 
@@ -166,7 +166,64 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     fail_count	    INT	        失敗重試次數
     created_at	    TIMESTAMP	擷取時間 (UTC，填表時會自動轉 +8)
 
-  (4)建立暫時的 Dockerfile (docker-compose.yml 裡面參照了 build: .，需要一個 Dockerfile 才能跑)
+  (4)建立 docker-compose.yml
+    version: '3.8'
+    services:
+    # 1. MySQL 資料庫服務
+    mysql-db:
+        image: mysql:8.0
+        container_name: asus_news_db
+        restart: always
+        environment:
+        MYSQL_ROOT_PASSWORD: mysecretpassword
+        MYSQL_DATABASE: security_news
+        MYSQL_USER: scraper_user
+        MYSQL_PASSWORD: scraper_password
+        # --- [新增這行] 強制伺服器端使用 UTF-8 編碼 ---
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        # ---------------------------------------------
+        ports:
+        - "3306:3306"
+        volumes:
+        - db_data:/var/lib/mysql
+        - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+        networks:
+        - scraper_network
+        healthcheck:
+        test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+    # 2. Python 應用程式服務
+    app:
+        build: .
+        container_name: asus_news_worker
+        depends_on:
+        mysql-db:
+            condition: service_healthy
+        # --- [關鍵修正] ---
+        # 使用 env_file 直接載入 .env 檔案中的所有變數
+        # 這樣 Python 才能讀取到 GOOGLE_FORM_URL
+        env_file:
+        - .env
+        # ----------------
+        volumes:
+        - .:/app
+        networks:
+        - scraper_network
+        # 保持容器開啟，方便開發
+        # 原本是: command: tail -f /dev/null
+        command: python app/main.py
+
+    volumes:
+    db_data:
+
+    networks:
+    scraper_network:
+        driver: bridge
+
+  (5)建立 Dockerfile (docker-compose.yml 裡面參照了 build: .，需要一個 Dockerfile 才能跑)
      a.在專案根目錄建立 Dockerfile。
      b.在Dockerfile貼上以下內容：
         # 使用 Python 3.9 Slim
@@ -1186,9 +1243,18 @@ Phase 2: 自動填表
     # 其他檔案只需: from logger import logger 即可使用
     logger = LoggerSetup().get_logger()
 
-7.在 Docker 裡面測試爬蟲
-  docker exec -it asus_news_worker python app/main.py
-  最後會看到 Log 顯示：  === 全部完成 ===
+7.執行
+  a.在 Docker 裡面手動測試爬蟲
+    docker exec -it asus_news_worker python app/main.py
+    最後會看到 Log 顯示：  === 全部完成 ===
+
+  b.自動化執行，程式自動跑起來
+    docker-compose up
+
+  註:
+  1.若要開發者進入手動執行，docker-compose.yml中改(command: tail -f /dev/null)後，手動執行docker exec -it asus_news_worker python app/main.py。
+  2.要執行「自動化系統」，預期 docker-compose up 後程式就會自動跑起來，因此docker-compose.yml中設定(command: tail -f /dev/null)。
+
 
 ================================================================================================
 🚀 查詢結果
