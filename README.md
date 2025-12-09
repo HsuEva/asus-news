@@ -3,6 +3,7 @@ ASUS Router Security News Automation
 專案目標是從多個來源（Google News、官方公告、資安論壇）爬取 ASUS Router 相關資安威脅，經過清洗與去重後存入 MySQL，最後自動填寫至 Google 表單以進行通報。  
 
 🌟 專案亮點  
+```text
 本專案包含許多針對 瀏覽器自動化 (Browser Automation) 的進階工程實踐：  
 1. 全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。  
 2. 高穩定性設計 (Resilience)：  
@@ -10,7 +11,8 @@ ASUS Router Security News Automation
    Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。  
 3.記憶體管理：實作 gc.collect() 與主動關閉 Driver，使用參數防止 Docker 記憶體崩潰，防止 Docker OOM。  
 4.精準過濾：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。  
-5.智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動 (Not Interactable) 的問題。  
+5.智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動的問題。  
+```
 
 🛠 技術堆疊 (Tech Stack)  
 ```text
@@ -78,14 +80,13 @@ asus-news/
 6.安裝完成後回到步驟1，檢查是否安裝成功，安裝成功後，接續7.開啟專案資料夾。  
 
 7.開啟專案資料夾  
-  在電腦桌面或你習慣的地方，建立一個新資料夾，命名為 
-  ```bash asus-news ``` 。  
-  在 Cursor 中，點選 ```bash File -> Open Folder ```，選擇這個資料夾。  
+  在電腦桌面或你習慣的地方，建立一個新資料夾，命名為 ```asus-news ``` 。  
+  在 Cursor 中，點選 ```File -> Open Folder ```，選擇這個資料夾。  
 
 ------------------------------------------------------------------------------------------------
 **第 1 階段：建立虛擬環境 (Virtual Environment)** - 為避免影響電腦其他專案，需要建立一個獨立的環境。  
 1.開啟 Cursor 的終端機  
-  使用快捷鍵 ```bash Ctrl + ` ``` 開啟終端機。  
+  使用快捷鍵 ```Ctrl + ` ``` 開啟終端機。  
   確保終端機路徑是在這個專案的資料夾底下。  
 
 2.請依序輸入以下指令：  
