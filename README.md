@@ -46,6 +46,7 @@ asus-news/
 =========================================================================================
 🚀 **環境建置 (Windows 開發環境)**  
 ※如果你是第一次在 Windows 上執行Cursor、Python、Docker，請依照以下步驟設定環境。  
+
 **第 0 階段：安裝編輯器 (Cursor、Docker、Python)**  
 1.下載 Cursor 作為程式碼編輯器  
   前往 Cursor 官網，下載安裝檔。  
@@ -83,17 +84,18 @@ asus-news/
   確保終端機路徑是在這個專案的資料夾底下。  
 
 2.請依序輸入以下指令：  
-  Windows:
+  Windows:  
   (1). 建立虛擬環境 (只需做一次)  
        ```bash
        python -m venv .venv  
        ```
+
   (2). 啟動虛擬環境 (每次重開 Cursor 都要確認前面有 (.venv) 字樣，通常 Cursor 會自動偵測)  
        ```bash
        .venv\Scripts\activate  
        ```
 
-註:
+註:  
 Q:如果遇到.venv\Scripts\activate錯誤為Windows PowerShell 安全性限制問題  
 A:解決方法  
   步驟 1：修改執行權限  
@@ -101,8 +103,7 @@ A:解決方法
   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser  
   ```
   步驟 2：權限改好後，再執行一次原本的指令  
-💡如何確認成功？  
-   看到 Terminal 的最前面出現了綠色或白色的 (.venv) 字樣  
+💡如何確認成功？ 看到 Terminal 的最前面出現了綠色或白色的 (.venv) 字樣  
 
 ------------------------------------------------------------------------------------------------
 **第 2 階段：驗證與安裝依賴**  
@@ -181,6 +182,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     created_at	    TIMESTAMP	擷取時間 (UTC，填表時會自動轉 +8)
 
   (4)建立 docker-compose.yml  
+    ```text
     version: '3.8'
     services:
     # 1. MySQL 資料庫服務
@@ -236,6 +238,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
     networks:
     scraper_network:
         driver: bridge
+    ```
 
   (5)建立 Dockerfile (docker-compose.yml 裡面參照了 build: .，需要一個 Dockerfile 才能跑)  
      a.在專案根目錄建立 Dockerfile。  
@@ -383,6 +386,7 @@ Phase 2: 自動填表
 ```
 
 1.請將以下內容複製到 app/scraper.py  
+```text
     import logging
     import time
     import random
@@ -621,8 +625,9 @@ Phase 2: 自動填表
                 self._init_driver()
             
             return results
-
+```
 2.請將以下內容複製到 app/utils.py，建立日期處理工具  
+```text
     import re
     from datetime import datetime, timedelta
 
@@ -698,8 +703,10 @@ Phase 2: 自動填表
         except Exception as e:
             print(f"日期解析失敗: {date_str}, 錯誤: {e}")
             return today.strftime("%Y-%m-%d")
+```
 
 3.請將以下內容複製到 app/main.py，更新主程式  
+```text
     import logging
     import time
     import os
@@ -882,8 +889,10 @@ Phase 2: 自動填表
 
     if __name__ == "__main__":
         main()
+```
 
 4.請將以下內容複製到 app/database.py，更新資料庫模組  
+```text
     import mysql.connector
     import os
     import logging
@@ -1053,8 +1062,10 @@ Phase 2: 自動填表
             finally:
                 if cursor: cursor.close()
                 if conn and conn.is_connected(): conn.close()
+```
 
 5.請將以下內容複製到 app/form_filler.py，更新Google Form 填表器  
+```text
     import logging
     import os
     import time
@@ -1210,8 +1221,10 @@ Phase 2: 自動填表
                     self.driver.quit()
                 except:
                     pass
+```
 
 6.請將以下內容複製到 app/logger.py，更新日誌設定模組  
+```text
     import logging
     import os
     import sys
@@ -1275,20 +1288,21 @@ Phase 2: 自動填表
     # 初始化並匯出 logger 實例
     # 其他檔案只需: from logger import logger 即可使用
     logger = LoggerSetup().get_logger()
+```
 
 7.執行  
   a.在 Docker 裡面手動測試爬蟲  
     ```bash
-    docker exec -it asus_news_worker python app/main.py
+    docker exec -it asus_news_worker python app/main.py  
     ```
     最後會看到 Log 顯示：  === 全部完成 ===  
 
   b.自動化執行，程式自動跑起來  
     ```bash
-    docker-compose up
+    docker-compose up  
     ```
 
-  註:
+  註:  
   1.若要開發者進入手動執行，docker-compose.yml中改(command: tail -f /dev/null)後，手動執行docker exec -it asus_news_worker python app/main.py。  
   2.如果是自動化系統，應該是設定為執行 Python，預期 docker-compose up 後程式就會自動跑起來，因此docker-compose.yml中設定(command: python app/main.py)。  
 
@@ -1297,7 +1311,7 @@ Phase 2: 自動填表
   docker logs -f asus_news_worker
   ```
 
-=========================================================================================
+**=========================================================================================**
 🚀 **查詢結果**  
 有不同方法可查詢結果  
 1. 至Google Form表單回應中查看  
@@ -1307,7 +1321,7 @@ Phase 2: 自動填表
        ```bash
        docker exec -it asus_news_db mysql -u root -p
        ```
-       系統會提示輸入密碼，請輸入 密碼
+       系統會提示輸入密碼，請輸入"密碼"
 
    (2)看到 mysql> 提示符號後，複製以下指令，切換資料庫  
       ```bash
