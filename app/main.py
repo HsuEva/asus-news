@@ -49,7 +49,7 @@ def force_exit_handler():
     直接使用 os._exit(1) 強制殺死所有執行緒與進程。
     """
     logger.critical(f"⚠️ 偵測到任務執行超過 {JOB_TIMEOUT_SECONDS} 秒，判定為卡死。")
-    logger.critical("💀 正在強制結束程式 (Force Kill)，等待 Docker 自動重啟...")
+    logger.critical("💀 正在強制結束程式 (Force Kill)")
     # os._exit 不會觸發清理 (finally)，是目前解決 Driver 卡死的唯一手段
     os._exit(1)
 
