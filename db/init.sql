@@ -25,6 +25,6 @@ CREATE TABLE IF NOT EXISTS news (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    -- 去重機制: 同一天、同標題的新聞視為重複，拒絕寫入
-    UNIQUE KEY unique_news_check (title, publish_date)
+    -- 去重機制: 同標題的新聞視為重複，拒絕寫入
+    UNIQUE KEY unique_news_check (title)
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

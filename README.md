@@ -90,7 +90,8 @@ asus-news/
 目前的參數設定位於程式碼中，您可以根據需求修改以下檔案：
 
 * **排程執行間隔** (`app/main.py`)：
-    預設為每 24 小時執行一次。
+    若要設定排成，可以將註解拿掉，預設為每 24 小時執行一次。
+    目前程式執行一次後就直接結束。
     ```python
     # 修改 wait_seconds 數值 (單位：秒)
     wait_seconds = 86400
@@ -116,19 +117,14 @@ asus-news/
 
 由於本專案涉及瀏覽器自動化與網頁爬取，使用時請留意以下潛在限制：
 
-1.  **Google 頻率限制 (Rate Limiting)**：
-    * 頻繁請求 Google Search 或 Google News 可能導致 IP 暫時被封鎖 (HTTP 429)。
-    * **解法**：系統已內建 `time.sleep()` 隨機延遲，但若部署於公有雲 IP，仍有較高風險觸發驗證碼。
+1.  **語意理解的局限性**：
+    * 目前的『關鍵字過濾』雖然快，但它看不懂文章。有時候『華碩提升資安防護』這種正面新聞也會被抓進來，這就是為什麼我們未來計畫導入 AI 來做更精準的語意判斷。
 
-2.  **表單驗證機制 (CAPTCHA)**：
-    * 若 Google 表單開啟了 reCAPTCHA (機器人驗證)，Selenium **無法**自動破解。
-    * **症狀**：Log 顯示填表失敗，截圖畫面停留在「選取圖片」的驗證環節。
-
-3.  **DOM 結構變更**：
+2.  **網頁結構變更風險**：
     * Google 服務的網頁結構 (Class Name, ID) 可能會不定期更新。若發生此情況，`scraper.py` 或 `form_filler.py` 中的 CSS Selector 可能失效，導致找不到元素。
 
-4.  **記憶體消耗**：
-    * 雖然已啟用 `headless` 與 `disable-dev-shm-usage`，但 Chrome Driver 仍可能隨時間累積記憶體佔用。系統會在每次任務結束後主動關閉 Driver 並呼叫 `gc.collect()` 進行回收。
+3.  **瀏覽器模擬的效能成本**：
+    * 雖然已啟用 `headless` 與 `disable-dev-shm-usage`，但 Chrome Driver 仍可能隨時間累積記憶體佔用，非常吃記憶體。系統會在每次任務結束後主動關閉 Driver 並呼叫 `gc.collect()` 進行回收。   
 
 **==========================================================================**
 ## 🚀 **環境建置 (Windows 開發環境)**  
@@ -256,9 +252,10 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-        -- 去重機制: 同一天、同標題的新聞視為重複，拒絕寫入
-        UNIQUE KEY unique_news_check (title, publish_date)
+        -- 去重機制: 同標題的新聞視為重複，拒絕寫入
+        UNIQUE KEY unique_news_check (title)
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 
     📊 資料庫 news_Schema
     欄位	        類型	    說明
@@ -275,6 +272,7 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
   (4)建立 docker-compose.yml  
     ```text
     version: '3.8'
+
     services:
     # 1. MySQL 資料庫服務
     mysql-db:
@@ -320,8 +318,8 @@ app: 之後要跑 Python 爬蟲的容器 (目前我們先預留設定，重點�
         networks:
         - scraper_network
         # 保持容器開啟，方便開發
-        # 原本是: command: tail -f /dev/null
-        command: python app/main.py
+        command: tail -f /dev/null
+        # command: python app/main.py
 
     volumes:
     db_data:
@@ -467,7 +465,7 @@ Google News (TW): 針對台灣在地報導。
 資安通報: 針對 bleepingcomputer 等權威網站。  
 深度閱讀：進入新聞頁面抓取內文。若遇到 404 或 PDF，會自動標記並跳過或使用備用摘要。  
 過濾機制：檢查標題與內文是否包含 ASUS 且同時包含 Router 或 Security 相關關鍵字 (支援中英)。  
-去重入庫：使用 INSERT IGNORE 與 Unique Key (Title + Date) 防止重複資料寫入 MySQL。  
+去重入庫：使用 INSERT IGNORE 與 Unique Key (Title) 防止重複資料寫入 MySQL。  
 
 Phase 2: 自動填表  
 狀態讀取：從資料庫撈取狀態為 N (New) 的資料。  
@@ -956,27 +954,27 @@ Phase 2: 自動填表
     def main():
         logger.info("=== 系統啟動：進入自動化排程模式 ===")
         # 加入 while True 讓它變成無窮迴圈
-        while True:
-            try:
-                time.sleep(2)
-                process_scraping_job()
-                gc.collect()
-                time.sleep(2)
+        # while True:
+        try:
+            time.sleep(2)
+            process_scraping_job()
+            gc.collect()
+            time.sleep(2)
+            
+            # 接收回傳的統計數據
+            total, success, fail = process_form_filling_job()
+            
+            logger.info("=== 全部完成 ===")
+            # 顯示統計結果
+            logger.info(f"執行統計: 總共 {total} 筆 | 成功: {success} 筆 | 失敗: {fail} 筆")
                 
-                # 接收回傳的統計數據
-                total, success, fail = process_form_filling_job()
+        except Exception as e:
+            logger.critical(f"主程式崩潰: {e}")
                 
-                logger.info("=== 全部完成 ===")
-                # 顯示統計結果
-                logger.info(f"執行統計: 總共 {total} 筆 | 成功: {success} 筆 | 失敗: {fail} 筆")
-                
-            except Exception as e:
-                logger.critical(f"主程式崩潰: {e}")
-                
-            # 設定下次執行的等待時間 (目前設定為 24 小時 = 86400 秒)
-            wait_seconds = 86400 
-            logger.info(f"進入待機模式，{wait_seconds/3600} 小時後將再次執行...")
-            time.sleep(wait_seconds)
+        # 設定下次執行的等待時間 (目前設定為 24 小時 = 86400 秒)
+        # wait_seconds = 86400 
+        # logger.info(f"進入待機模式，{wait_seconds/3600} 小時後將再次執行...")
+        # time.sleep(wait_seconds)
 
     if __name__ == "__main__":
         main()
