@@ -8,7 +8,8 @@ ASUS Router Security News Automation
 1. 全 Selenium 架構：搜尋與內文閱讀皆採用 Selenium，並實作 Anti-Detect 機制繞過網站防護。  
 2. 高穩定性設計 (Resilience)：  
    Eager Loading 策略：大幅縮短頁面載入等待時間，防止爬蟲卡死。  
-   Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。  
+   Driver 自動復活：偵測到底層連線 (HTTPConnectionPool) 錯誤時，會自動重啟瀏覽器，實現無人值守運行。 
+   中斷機制 : 偵測到程式卡死五分鐘後，代表 Driver 已經死鎖，直接程式中斷。
 3.記憶體管理：實作 gc.collect() 與主動關閉 Driver，使用參數防止 Docker 記憶體崩潰，防止 Docker OOM。  
 4.精準過濾：內建多語系關鍵字過濾器，確保新聞與「ASUS」及「Router/資安」高度相關。  
 5.智慧填表：使用 JavaScript Injection 技術，解決 Google 表單輸入框不可互動的問題。  
@@ -56,7 +57,7 @@ ASUS Router Security News Automation
 ```text
 asus-news/
 ├── app/
-│   ├── main.py             # 主程式 (負責排程、多源搜尋邏輯)
+│   ├── main.py             # 主程式 (負責排程、多源搜尋邏輯、中斷機制)
 │   ├── scraper.py          # 爬蟲核心 (含反偵測、重啟機制、Eager模式)
 │   ├── form_filler.py      # 填表機器人 (含 JS 注入、時區校正)
 │   ├── database.py         # 資料庫操作 (含去重邏輯)
@@ -800,12 +801,18 @@ Phase 2: 自動填表
     import time
     import os
     import gc
+    import threading  # 新增: 用於計時器
+    import sys        # 新增: 用於強制退出
     from datetime import datetime, timedelta, timezone
     from scraper import NewsScraper
     from database import Database
     from utils import parse_relative_date
     from form_filler import FormFiller
     from logger import logger
+
+    # --- 設定逾時時間 (秒) ---
+    # 設定為 300 秒 (5分鐘)，如果超過這個時間還沒跑完，視為卡死
+    JOB_TIMEOUT_SECONDS = 300 
 
     # 多源搜尋設定
     SEARCH_CONFIGS = [
@@ -834,6 +841,16 @@ Phase 2: 自動填表
             "lang": "en"
         }
     ]
+
+    def force_exit_handler():
+        """
+        當超時發生時的處理函式。
+        直接使用 os._exit(1) 強制殺死所有執行緒與進程。
+        """
+        logger.critical(f"⚠️ 偵測到任務執行超過 {JOB_TIMEOUT_SECONDS} 秒，判定為卡死。")
+        logger.critical("💀 正在強制結束程式 (Force Kill)，等待 Docker 自動重啟...")
+        # os._exit 不會觸發清理 (finally)，是目前解決 Driver 卡死的唯一手段
+        os._exit(1)
 
     def process_scraping_job():
         logger.info("=== 階段一: 雙語多源爬蟲啟動 ===")
@@ -881,6 +898,7 @@ Phase 2: 自動填表
                 std_date = parse_relative_date(item['date_raw'])
                 
                 cleaned_data.append({
+                    # 確保去空白
                     'title': item['title'].strip(),
                     'url': item['url'],
                     'publish_date': std_date,
@@ -951,25 +969,43 @@ Phase 2: 自動填表
                 
         return total_tasks, success_count, fail_count
 
-    def main():
-        logger.info("=== 系統啟動：進入自動化排程模式 ===")
-        # 加入 while True 讓它變成無窮迴圈
-        # while True:
+    def run_cycle_with_watchdog():
+        """
+        執行一次完整的爬蟲與填表循環，並加上逾時監控。
+        """
+        # 1. 啟動計時器 (Watchdog)
+        # 如果這個計時器倒數結束，就會執行 force_exit_handler 殺死程式
+        timer = threading.Timer(JOB_TIMEOUT_SECONDS, force_exit_handler)
+        timer.start()
+        
         try:
+            # 執行主要任務
             time.sleep(2)
             process_scraping_job()
             gc.collect()
             time.sleep(2)
             
-            # 接收回傳的統計數據
             total, success, fail = process_form_filling_job()
             
             logger.info("=== 全部完成 ===")
-            # 顯示統計結果
             logger.info(f"執行統計: 總共 {total} 筆 | 成功: {success} 筆 | 失敗: {fail} 筆")
+            
+        finally:
+            # 2. 任務如果正常結束，必須取消計時器，否則它會在背景繼續倒數然後殺死程式
+            timer.cancel()
+
+    def main():
+        logger.info("=== 系統啟動：進入自動化排程模式 ===")
+        
+        # while True:
+        try:
+            # 使用帶有監控機制的函式來執行任務
+            run_cycle_with_watchdog()
                 
         except Exception as e:
-            logger.critical(f"主程式崩潰: {e}")
+            logger.critical(f"主程式崩潰 (Exception): {e}")
+            # 如果是嚴重錯誤，也可以選擇直接重啟 Docker
+            # os._exit(1)
                 
         # 設定下次執行的等待時間 (目前設定為 24 小時 = 86400 秒)
         # wait_seconds = 86400 
